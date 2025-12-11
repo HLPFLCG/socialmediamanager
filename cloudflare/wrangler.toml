@@ -5,7 +5,8 @@ account_id = "8c74a072236761cf6126371f0b20c5a9"
 
 # Custom domain routes
 routes = [
-  { pattern = "api.hlpfl.space/*", zone_name = "hlpfl.space" }
+  { pattern = "api.hlpfl.space/*", zone_name = "hlpfl.space" },
+  { pattern = "hlpfl.space/api/*", zone_name = "hlpfl.space" }
 ]
 
 [vars]

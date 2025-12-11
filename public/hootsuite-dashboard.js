@@ -5,7 +5,7 @@ class HLPFLSocialMediaManager {
         this.token = localStorage.getItem('token');
         this.selectedPlatforms = [];
         this.uploadedMedia = [];
-        this.apiBaseUrl = 'https://api.hlpfl.space';
+        this.apiBaseUrl = window.location.origin.includes('hlpfl.space') ? '/api' : 'https://api.hlpfl.space';
         this.init();
     }
 
