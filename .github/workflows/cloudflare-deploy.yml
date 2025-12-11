@@ -48,17 +48,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Build Frontend
-        run: npm run build
-
       - name: Deploy to Pages
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: socialmediamanager
-          directory: public
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Frontend is already embedded in the Workers API"
+          echo "Access the dashboard at: https://socialmediamanager-api-production.hlpfl-co.workers.dev/"
