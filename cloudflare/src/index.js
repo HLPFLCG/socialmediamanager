@@ -265,8 +265,6 @@ app.post('/api/posts', authenticate, async (c) => {
         status: scheduled_at ? 'scheduled' : 'draft'
       }
     });
-      }
-    });
   } catch (error) {
     console.error('Create post error:', error);
     return c.json({ error: 'Failed to create post' }, 500);
