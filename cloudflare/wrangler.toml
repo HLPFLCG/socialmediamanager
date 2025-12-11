@@ -4,11 +4,11 @@ compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 account_id = "8c74a072236761cf6126371f0b20c5a9"
 
-# Custom domain routes
-routes = [
-  { pattern = "api.hlpfl.space/*", zone_name = "hlpfl.space" },
-  { pattern = "hlpfl.space/api/*", zone_name = "hlpfl.space" }
-]
+# Custom domain routes (configured manually in dashboard)
+# routes = [
+#   { pattern = "api.hlpfl.space/*", zone_name = "hlpfl.space" },
+#   { pattern = "hlpfl.space/api/*", zone_name = "hlpfl.space" }
+# ]
 
 [vars]
 NODE_ENV = "production"
@@ -21,11 +21,11 @@ binding = "DB"
 database_name = "socialmediamanager-db"
 database_id = "8860d9ea-f18a-422d-b409-f641edd83fd0"
 
-# KV Storage for user data
-[[kv_namespaces]]
-binding = "USERS_KV"
-id = "socialmediamanager-users"
-preview_id = "socialmediamanager-users-preview"
+# KV Storage for user data (commented out - using D1 instead)
+# [[kv_namespaces]]
+# binding = "USERS_KV"
+# id = "socialmediamanager-users"
+# preview_id = "socialmediamanager-users-preview"
 
 # Environment variables (set these in Cloudflare dashboard)
 # TWITTER_API_KEY = "your-key"
