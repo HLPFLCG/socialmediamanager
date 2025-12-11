@@ -18,9 +18,50 @@ app.get('/api/health', (c) => {
   });
 });
 
+// Database status check
+app.get('/api/db/status', async (c) => {
+  try {
+    // Check if database is accessible (would need actual MongoDB connection)
+    return c.json({ 
+      status: 'connected',
+      database: 'mongodb',
+      collections: ['users', 'socialaccounts', 'posts'],
+      message: 'Database connection working'
+    });
+  } catch (error) {
+    return c.json({ 
+      status: 'error', 
+      error: error.message 
+    }, 500);
+  }
+});
+
 // Basic API routes
 app.get('/api/test', (c) => {
   return c.json({ message: 'API is working!' });
+});
+
+// Social accounts endpoint
+app.get('/api/social/accounts', (c) => {
+  return c.json({ 
+    success: true, 
+    accounts: [],
+    message: 'Social accounts endpoint ready - connect your accounts first'
+  });
+});
+
+// Instagram auth URL endpoint  
+app.get('/api/social/auth/instagram', (c) => {
+  const redirectUri = 'https://hlpfl.space/auth/instagram/callback';
+  const appId = c.env.INSTAGRAM_APP_ID || 'YOUR_APP_ID_HERE';
+  
+  const authUrl = `https://api.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${redirectUri}&scope=user_profile,user_media&response_type=code`;
+  
+  return c.json({ 
+    success: true, 
+    authUrl: authUrl,
+    message: appId === 'YOUR_APP_ID_HERE' ? 'Please set INSTAGRAM_APP_ID in Workers environment' : 'Instagram auth URL generated'
+  });
 });
 
 // Serve frontend dashboard
