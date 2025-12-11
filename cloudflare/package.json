@@ -10,7 +10,8 @@
     "deploy:production": "wrangler deploy --env production"
   },
   "dependencies": {
-    "hono": "^3.11.7"
+    "hono": "^3.11.7",
+    "jsonwebtoken": "^9.0.0"
   },
   "devDependencies": {
     "wrangler": "^3.19.0"
