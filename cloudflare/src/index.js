@@ -11,7 +11,7 @@ const app = new Hono();
 
 // Middleware
 app.use('*', cors({
-  origin: ['https://hlpfl.space', 'https://68a375ce.socialmediamanager-frontend.pages.dev'],
+  origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -1042,7 +1042,7 @@ class HLPFLSocialMediaManager {
         this.token = localStorage.getItem('token');
         this.selectedPlatforms = [];
         this.uploadedMedia = [];
-        this.apiBaseUrl = window.location.origin.includes('hlpfl.space') ? '/api' : 'https://api.hlpfl.space';
+        this.apiBaseUrl = '/api';
         this.init();
     }
 
