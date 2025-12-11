@@ -6,7 +6,7 @@ class SocialMediaManager {
         this.selectedPlatforms = [];
         this.uploadedMedia = [];
         // Use Cloudflare Workers URL
-        this.apiBaseUrl = import.meta.env?.VITE_API_URL || 'https://socialmediamanager-api.your-subdomain.workers.dev';
+        this.apiBaseUrl = import.meta.env?.VITE_API_URL || 'https://api.hlpfl.space';
         this.init();
     }
 

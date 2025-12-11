@@ -16,6 +16,8 @@ const scheduleRoutes = require('./routes/schedule');
 const mediaRoutes = require('./routes/media');
 
 const scheduler = require('./services/scheduler');
+const UnifiedPostingService = require('./services/unifiedPostingService');
+const postingService = new UnifiedPostingService();
 const logger = require('./utils/logger');
 
 const app = express();

@@ -4,6 +4,13 @@ const SocialAccount = require('../models/SocialAccount');
 const twitterService = require('../services/twitterService');
 const linkedinService = require('../services/linkedinService');
 const facebookService = require('../services/facebookService');
+const TikTokService = require('../services/tiktokService');
+const InstagramService = require('../services/instagramService');
+const YouTubeService = require('../services/youtubeService');
+
+const tikTokService = new TikTokService();
+const instagramService = new InstagramService();
+const youtubeService = new YouTubeService();
 const router = express.Router();
 
 router.get('/accounts', auth, async (req, res) => {
@@ -113,6 +120,20 @@ router.get('/auth-url/:platform', auth, async (req, res) => {
       case 'facebook':
         authUrl = facebookService.getAuthUrl();
         break;
+      case 'tiktok':
+        authUrl = tikTokService.getAuthUrl(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/tiktok/callback`);
+        break;
+      case 'instagram':
+        const { type } = req.query;
+        if (type === 'business') {
+          authUrl = instagramService.getBusinessAuthUrl(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/instagram/callback`);
+        } else {
+          authUrl = instagramService.getAuthUrl(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/instagram/callback`);
+        }
+        break;
+      case 'youtube':
+        authUrl = youtubeService.getAuthUrl(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/youtube/callback`);
+        break;
       default:
         return res.status(400).json({ error: 'Unsupported platform' });
     }
@@ -170,6 +191,32 @@ router.post('/auth/callback/:platform', auth, async (req, res) => {
           if (pagesResult.success) {
             result.pages = pagesResult.pages;
           }
+        }
+        break;
+      case 'tiktok':
+        result = await tikTokService.getAccessToken(code, `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/tiktok/callback`);
+        if (result.access_token) {
+          tikTokService.accessToken = result.access_token;
+          const profileResult = await tikTokService.getUserInfo();
+          result.profile = profileResult.data.user;
+        }
+        break;
+      case 'instagram':
+        result = await instagramService.getAccessToken(code, `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/instagram/callback`);
+        if (result.access_token) {
+          const longLivedResult = await instagramService.getLongLivedToken(result.access_token);
+          result.access_token = longLivedResult.access_token;
+          instagramService.accessToken = longLivedResult.access_token;
+          const profileResult = await instagramService.getUserProfile();
+          result.profile = profileResult;
+        }
+        break;
+      case 'youtube':
+        result = await youtubeService.getAccessToken(code, `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/youtube/callback`);
+        if (result.access_token) {
+          youtubeService.accessToken = result.access_token;
+          const profileResult = await youtubeService.getChannelInfo();
+          result.profile = profileResult.items[0];
         }
         break;
       default:
@@ -261,6 +308,21 @@ router.get('/platform-limits/:platform', auth, async (req, res) => {
         maxMedia: 10,
         supportedMedia: ['image/jpeg', 'image/png', 'video/mp4'],
         requiresMedia: true
+      },
+      tiktok: {
+        maxLength: 150,
+        maxMedia: 1,
+        supportedMedia: ['video/mp4'],
+        requiresMedia: true,
+        maxVideoSize: '100MB'
+      },
+      youtube: {
+        maxLength: 5000,
+        maxMedia: 1,
+        supportedMedia: ['video/mp4'],
+        requiresMedia: true,
+        maxVideoSize: '256GB',
+        titleRequired: true
       }
     };
 
