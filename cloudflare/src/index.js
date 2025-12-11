@@ -242,7 +242,7 @@ app.post('/api/posts', authenticate, async (c) => {
       return c.json({ error: 'Content and platforms are required' }, 400);
     }
 
-    const post = await d1Service.createPost({
+    const postResult = await d1Service.createPost({
       user_id: user.id,
       content,
       platforms,
@@ -250,15 +250,21 @@ app.post('/api/posts', authenticate, async (c) => {
       status: scheduled_at ? 'scheduled' : 'draft',
       scheduled_at
     });
-    
+
+    if (!postResult.success) {
+      return c.json({ error: 'Failed to create post: ' + postResult.error }, 500);
+    }
+
     return c.json({
       success: true,
       post: {
-        id: post.postId,
+        id: postResult.postId,
         content,
         platforms,
         media_urls,
         status: scheduled_at ? 'scheduled' : 'draft'
+      }
+    });
       }
     });
   } catch (error) {

@@ -111,13 +111,18 @@ export class D1Service {
     const platforms_json = JSON.stringify(platforms);
     const media_urls_json = media_urls ? JSON.stringify(media_urls) : null;
     
-    const stmt = this.db.prepare(`
-      INSERT INTO posts (user_id, content, platforms, media_urls, status, scheduled_at) 
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-    
-    const result = await stmt.bind(user_id, content, platforms_json, media_urls_json, status, scheduled_at).run();
-    return { success: true, postId: result.meta.last_row_id };
+    try {
+      const stmt = this.db.prepare(`
+        INSERT INTO posts (user_id, content, platforms, media_urls, status, scheduled_at) 
+        VALUES (?, ?, ?, ?, ?, ?)
+      `);
+      
+      const result = await stmt.bind(user_id, content, platforms_json, media_urls_json, status, scheduled_at).run();
+      return { success: true, postId: result.meta.last_row_id };
+    } catch (error) {
+      console.error('Error creating post:', error);
+      return { success: false, error: error.message };
+    }
   }
 
   async getPosts(userId, limit = 50, offset = 0) {
