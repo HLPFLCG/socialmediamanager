@@ -12,10 +12,6 @@ NODE_ENV = "production"
 # REDIS_URL = "your-redis-url"
 # JWT_SECRET = "your-jwt-secret"
 
-[[r2_buckets]]
-binding = "MEDIA_BUCKET"
-bucket_name = "social-media-media"
-
 [env.production]
 vars = { ENVIRONMENT = "production" }
 
