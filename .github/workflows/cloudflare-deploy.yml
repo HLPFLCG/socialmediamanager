@@ -32,9 +32,7 @@ jobs:
       - name: Deploy to Workers
         run: |
           cd cloudflare
-          wrangler deploy --env production
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN=JRtvDTpOIWhAxPjt_fEYBOD1-i8jvt1zcQEv-_cj wrangler deploy --env production
 
   deploy-frontend:
     runs-on: ubuntu-latest
