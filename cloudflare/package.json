@@ -1,0 +1,21 @@
+{
+  "name": "socialmediamanager-cloudflare",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:production": "wrangler deploy --env production"
+  },
+  "dependencies": {
+    "hono": "^3.11.7",
+    "hono/cors": "^3.11.7",
+    "hono/logger": "^3.11.7",
+    "hono/secure-headers": "^3.11.7"
+  },
+  "devDependencies": {
+    "wrangler": "^3.19.0"
+  }
+}

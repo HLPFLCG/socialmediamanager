@@ -1,0 +1,22 @@
+name = "socialmediamanager-api"
+main = "src/index.js"
+compatibility_date = "2023-12-01"
+
+[vars]
+NODE_ENV = "production"
+
+# Environment variables (set these in Cloudflare dashboard)
+# TWITTER_API_KEY = "your-key"
+# MONGODB_URI = "your-mongodb-connection"
+# REDIS_URL = "your-redis-url"
+# JWT_SECRET = "your-jwt-secret"
+
+[[r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "social-media-media"
+
+[env.production]
+vars = { ENVIRONMENT = "production" }
+
+[env.staging]
+vars = { ENVIRONMENT = "staging" }
