@@ -64,6 +64,36 @@ app.get('/api/social/auth/instagram', (c) => {
   });
 });
 
+// TikTok auth URL endpoint
+app.get('/api/social/auth/tiktok', (c) => {
+  const redirectUri = 'https://hlpfl.space/auth/tiktok/callback';
+  const clientKey = c.env.TIKTOK_CLIENT_KEY || 'YOUR_TIKTOK_CLIENT_KEY_HERE';
+  const scopes = 'user.info.basic,video.list,video.upload';
+  
+  const authUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${clientKey}&scope=${scopes}&response_type=code&redirect_uri=${redirectUri}`;
+  
+  return c.json({ 
+    success: true, 
+    authUrl: authUrl,
+    message: clientKey === 'YOUR_TIKTOK_CLIENT_KEY_HERE' ? 'Please set TIKTOK_CLIENT_KEY in Workers environment' : 'TikTok auth URL generated'
+  });
+});
+
+// YouTube auth URL endpoint
+app.get('/api/social/auth/youtube', (c) => {
+  const redirectUri = 'https://hlpfl.space/auth/youtube/callback';
+  const clientId = c.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID_HERE';
+  const scopes = 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly';
+  
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent`;
+  
+  return c.json({ 
+    success: true, 
+    authUrl: authUrl,
+    message: clientId === 'YOUR_GOOGLE_CLIENT_ID_HERE' ? 'Please set GOOGLE_CLIENT_ID in Workers environment' : 'YouTube auth URL generated'
+  });
+});
+
 // Serve frontend dashboard
 app.get('/', async (c) => {
   const html = `
