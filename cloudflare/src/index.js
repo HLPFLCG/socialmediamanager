@@ -1,37 +1,35 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import { secureHeaders } from 'hono/secure-headers';
-
-// Import your API routes
-import authRoutes from '../routes/auth.js';
-import postRoutes from '../routes/posts.js';
-import socialRoutes from '../routes/social.js';
 
 const app = new Hono();
 
 // Middleware
 app.use('*', cors());
 app.use('*', logger());
-app.use('*', secureHeaders());
 
 // Health check
 app.get('/api/health', (c) => {
   return c.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    environment: c.env.ENVIRONMENT || 'development'
+    environment: c.env.ENVIRONMENT || 'development',
+    message: 'Social Media Manager API is running!'
   });
 });
 
-// API Routes
-app.route('/api/auth', authRoutes);
-app.route('/api/posts', postRoutes);
-app.route('/api/social', socialRoutes);
+// Basic API routes
+app.get('/api/test', (c) => {
+  return c.json({ message: 'API is working!' });
+});
 
-// Static assets handled by Cloudflare Pages
-app.get('*', (c) => {
-  return c.text('Social Media Manager API', 200);
+// Welcome route
+app.get('/', (c) => {
+  return c.json({ 
+    name: 'Social Media Manager API',
+    version: '1.0.0',
+    status: 'running'
+  });
 });
 
 // Error handling

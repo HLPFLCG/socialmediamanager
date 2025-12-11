@@ -1,6 +1,7 @@
 name = "socialmediamanager-api"
 main = "src/index.js"
 compatibility_date = "2023-12-01"
+account_id = "8c74a072236761cf6126371f0b20c5a9"
 
 [vars]
 NODE_ENV = "production"

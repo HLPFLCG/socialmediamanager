@@ -10,10 +10,7 @@
     "deploy:production": "wrangler deploy --env production"
   },
   "dependencies": {
-    "hono": "^3.11.7",
-    "hono/cors": "^3.11.7",
-    "hono/logger": "^3.11.7",
-    "hono/secure-headers": "^3.11.7"
+    "hono": "^3.11.7"
   },
   "devDependencies": {
     "wrangler": "^3.19.0"
