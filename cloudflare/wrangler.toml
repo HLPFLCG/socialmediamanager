@@ -2,6 +2,16 @@ name = "socialmediamanager-api"
 main = "src/index.js"
 compatibility_date = "2024-12-17"
 compatibility_flags = ["nodejs_compat"]
+
+# Node.js compatibility for dependencies
+[build]
+command = "npm install"
+
+# External dependencies for bundling
+[build.upload]
+format = "modules"
+dir = "."
+main = "src/index.js"
 account_id = "8c74a072236761cf6126371f0b20c5a9"
 
 [vars]

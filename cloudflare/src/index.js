@@ -1,18 +1,20 @@
 import { Hono } from 'hono';
-import { cors } from 'hono/cors';
-import { jwt } from 'hono/jwt';
-import { auth } from 'hono/auth';
-import { D1Database } from 'cloudflare';
 
 const app = new Hono();
 
-// CORS configuration
-app.use('*', cors({
-  origin: ['https://hlpfl.space', 'http://localhost:3000'],
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+// Simple CORS middleware
+app.use('*', async (c, next) => {
+  c.header('Access-Control-Allow-Origin', 'https://hlpfl.space');
+  c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  c.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (c.req.method === 'OPTIONS') {
+    return c.text('', 200);
+  }
+  
+  await next();
+});
 
 // JWT middleware for protected routes
 app.use('/api/*', async (c, next) => {
