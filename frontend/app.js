@@ -647,11 +647,12 @@ class SocialMediaManager {
         this.showNotification('Logged out successfully', 'info');
     }
 
-    // OAuth Methods
+    // OAuth Methods - using standalone functions instead
     connectSocialAccount(platform) {
-        const baseUrl = window.location.origin;
-        const authUrl = `${baseUrl}/auth/${platform}/authorize`;
-        window.open(authUrl, '_blank', 'width=600,height=600');
+        // Delegate to standalone function
+        if (typeof window.connectSocialAccount === 'function') {
+            window.connectSocialAccount(platform);
+        }
     }
 
     async loadConnectedAccounts() {
@@ -764,8 +765,14 @@ async function loadSocialAccounts() {
     });
 
     try {
+        // Get current user
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (!user.id) {
+            throw new Error('User not authenticated');
+        }
+
         // Load actual connected accounts from API
-        const response = await fetch(`${API_BASE_URL}/api/social/accounts`, {
+        const response = await fetch(`${window.location.origin}/api/social/accounts?user_id=${user.id}`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -775,7 +782,8 @@ async function loadSocialAccounts() {
             throw new Error('Failed to load accounts');
         }
 
-        const accounts = await response.json();
+        const data = await response.json();
+        const accounts = data.accounts || [];
         updateAccountCards(accounts);
 
     } catch (error) {
@@ -840,30 +848,48 @@ async function connectSocialAccount(platform) {
         button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
         button.disabled = true;
 
-        // Get current user
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        // Get the current deployed URL for OAuth
+        const baseUrl = window.location.origin;
+        const authUrl = `${baseUrl}/auth/${platform}/authorize`;
         
-        // Initiate OAuth flow
-        const response = await fetch(`${API_BASE_URL}/oauth/${platform}/authorize?user_id=${user.id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+        // Open OAuth popup
+        const popup = window.open(authUrl, '_blank', 'width=600,height=600');
+        
+        // Listen for popup closure
+        const checkClosed = setInterval(() => {
+            if (popup.closed) {
+                clearInterval(checkClosed);
+                // Reset button if popup was closed without success
+                button.innerHTML = originalText;
+                button.disabled = false;
+                showNotification('Authentication was cancelled', 'info');
             }
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to initiate OAuth flow');
-        }
-
-        const data = await response.json();
+        }, 1000);
         
-        // Redirect to OAuth provider
-        if (data.authorization_url) {
-            window.location.href = data.authorization_url;
-        } else {
-            throw new Error('No authorization URL received');
-        }
+        // Listen for message from popup (OAuth callback)
+        const messageHandler = (event) => {
+            if (event.origin === window.location.origin) {
+                if (event.data.success) {
+                    clearInterval(checkClosed);
+                    popup.close();
+                    showNotification(`${platform.charAt(0).toUpperCase() + platform.slice(1)} connected successfully!`, 'success');
+                    loadSocialAccounts(); // Refresh the accounts list
+                } else if (event.data.error) {
+                    clearInterval(checkClosed);
+                    popup.close();
+                    showNotification('Failed to connect account: ' + event.data.error, 'error');
+                }
+                
+                // Reset button
+                button.innerHTML = originalText;
+                button.disabled = false;
+                
+                // Remove event listener
+                window.removeEventListener('message', messageHandler);
+            }
+        };
+        
+        window.addEventListener('message', messageHandler);
 
     } catch (error) {
         console.error('Connection error:', error);
@@ -882,7 +908,13 @@ async function disconnectSocialAccount(platform) {
             return;
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/social/accounts/${platform}`, {
+        // Get current user
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (!user.id) {
+            throw new Error('User not authenticated');
+        }
+
+        const response = await fetch(`${window.location.origin}/api/social/accounts/${platform}?user_id=${user.id}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -902,7 +934,7 @@ async function disconnectSocialAccount(platform) {
     }
 }
 
-// Handle OAuth callback
+// Handle OAuth callback for popup window
 function handleOAuthCallback() {
     const urlParams = new URLSearchParams(window.location.search);
     const platform = urlParams.get('platform');
@@ -911,20 +943,29 @@ function handleOAuthCallback() {
     const error = urlParams.get('error');
 
     if (platform && (code || error)) {
-        if (error) {
-            console.error('OAuth error:', error);
-            showNotification('Authentication failed', 'error');
-            return;
+        // Send message to parent window
+        if (window.opener) {
+            if (error) {
+                window.opener.postMessage({
+                    success: false,
+                    error: error,
+                    platform: platform
+                }, window.location.origin);
+            } else {
+                // Exchange code for token
+                exchangeCodeForToken(platform, code, state, window.opener);
+                return; // Don't close window yet, wait for token exchange
+            }
         }
-
-        // Exchange code for token
-        exchangeCodeForToken(platform, code, state);
+        
+        // Close popup window
+        window.close();
     }
 }
 
-async function exchangeCodeForToken(platform, code, state) {
+async function exchangeCodeForToken(platform, code, state, openerWindow) {
     try {
-        const response = await fetch(`${API_BASE_URL}/oauth/${platform}/callback`, {
+        const response = await fetch(`${window.location.origin}/auth/${platform}/callback`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -938,20 +979,57 @@ async function exchangeCodeForToken(platform, code, state) {
 
         const result = await response.json();
         
-        if (result.success) {
-            showNotification(`${platform.charAt(0).toUpperCase() + platform.slice(1)} connected successfully!`, 'success');
-            // Reload accounts after a short delay
-            setTimeout(() => {
-                loadSocialAccounts();
-            }, 1000);
-        } else {
-            showNotification('Failed to connect account', 'error');
+        // Send success message to parent window
+        if (openerWindow) {
+            openerWindow.postMessage({
+                success: true,
+                platform: platform,
+                data: result
+            }, window.location.origin);
         }
+        
+        // Close popup window
+        window.close();
 
     } catch (error) {
         console.error('Token exchange error:', error);
-        showNotification('Failed to connect account', 'error');
+        
+        // Send error message to parent window
+        if (openerWindow) {
+            openerWindow.postMessage({
+                success: false,
+                error: error.message,
+                platform: platform
+            }, window.location.origin);
+        }
+        
+        // Close popup window
+        window.close();
     }
+}
+
+// Show notification function
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
 }
 
 // Initialize social accounts when DOM is loaded
