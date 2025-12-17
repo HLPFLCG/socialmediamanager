@@ -713,7 +713,7 @@ app.notFound((c) => {
   }, 404);
 });
 
-export default app;// Additional API Endpoints for Social Media Manager
+// Additional API Endpoints for Social Media Manager
 // These should be added to index.js before the error handlers
 
 // Analytics endpoint
