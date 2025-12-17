@@ -15,6 +15,8 @@ Use the "Custom token" option with these settings:
 
 **Account Permissions:**
 - Account: `Cloudflare D1:Edit`
+- Account: `Account Settings:Read`
+- User: `User Details:Read`
 - Zone: `Zone:Read` (optional, for domain management)
 - Zone: `Zone Resources:Include All zones` (if zone access needed)
 
