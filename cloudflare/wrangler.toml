@@ -1,6 +1,6 @@
 name = "socialmediamanager-api"
 main = "src/index.js"
-compatibility_date = "2024-09-23"
+compatibility_date = "2024-12-17"
 compatibility_flags = ["nodejs_compat"]
 account_id = "8c74a072236761cf6126371f0b20c5a9"
 
@@ -11,9 +11,8 @@ account_id = "8c74a072236761cf6126371f0b20c5a9"
 # ]
 
 [vars]
-NODE_ENV = "production"
-JWT_SECRET = "your-super-secret-jwt-key-change-this-in-production"
-# MONGODB_URI = "mongodb+srv://founder_db_user:hlpfl@cluster0.gannhym.mongodb.net/"
+NODE_ENV = "development"
+ALLOWED_ORIGINS = "https://hlpfl.space,https://socialmediamanager-api-production.hlpfl-co.workers.dev"
 
 # D1 Database for user data
 [[d1_databases]]
@@ -21,20 +20,24 @@ binding = "DB"
 database_name = "socialmediamanager-db"
 database_id = "8860d9ea-f18a-422d-b409-f641edd83fd0"
 
-# KV Storage for user data (commented out - using D1 instead)
-# [[kv_namespaces]]
-# binding = "USERS_KV"
-# id = "socialmediamanager-users"
-# preview_id = "socialmediamanager-users-preview"
-
-# Environment variables (set these in Cloudflare dashboard)
-# TWITTER_API_KEY = "your-key"
-# MONGODB_URI = "your-mongodb-connection"
-# REDIS_URL = "your-redis-url"
-# JWT_SECRET = "your-jwt-secret"
+# IMPORTANT: Set these secrets using wrangler CLI or Cloudflare dashboard:
+# wrangler secret put JWT_SECRET --env production
+# wrangler secret put TWITTER_API_KEY --env production
+# wrangler secret put TWITTER_API_SECRET --env production
+# wrangler secret put LINKEDIN_CLIENT_ID --env production
+# wrangler secret put LINKEDIN_CLIENT_SECRET --env production
+# wrangler secret put FACEBOOK_APP_ID --env production
+# wrangler secret put FACEBOOK_APP_SECRET --env production
+# wrangler secret put INSTAGRAM_CLIENT_ID --env production
+# wrangler secret put INSTAGRAM_CLIENT_SECRET --env production
 
 [env.production]
-vars = { ENVIRONMENT = "production", NODE_ENV = "production", JWT_SECRET = "your-super-secret-jwt-key-change-this-in-production" }
+name = "socialmediamanager-api-production"
+vars = { 
+  ENVIRONMENT = "production", 
+  NODE_ENV = "production",
+  ALLOWED_ORIGINS = "https://hlpfl.space,https://socialmediamanager-api-production.hlpfl-co.workers.dev"
+}
 
 [[env.production.d1_databases]]
 binding = "DB"
@@ -42,9 +45,14 @@ database_name = "socialmediamanager-db"
 database_id = "8860d9ea-f18a-422d-b409-f641edd83fd0"
 
 [env.staging]
-vars = { ENVIRONMENT = "staging", NODE_ENV = "staging", JWT_SECRET = "staging-jwt-secret" }
+name = "socialmediamanager-api-staging"
+vars = { 
+  ENVIRONMENT = "staging", 
+  NODE_ENV = "staging",
+  ALLOWED_ORIGINS = "*"
+}
 
 [[env.staging.d1_databases]]
 binding = "DB"
-database_name = "socialmediamanager-db"
+database_name = "socialmediamanager-db-staging"
 database_id = "8860d9ea-f18a-422d-b409-f641edd83fd0"
