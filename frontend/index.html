@@ -155,27 +155,79 @@
             <!-- Social Accounts Section -->
             <section id="accounts" class="main-section">
                 <div class="section-header">
-                    <h2><i class="fas fa-user-circle"></i> Connected Social Accounts</h2>
+                    <h2><i class="fas fa-user-circle"></i> Social Accounts</h2>
+                    <button class="btn-primary" onclick="loadSocialAccounts()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
                 </div>
-                <div class="compose-form">
-                    <div id="connectedAccounts">
-                        <div class="oauth-loading"><i class="fas fa-spinner"></i><span>Loading connected accounts...</span></div>
+                
+                <div class="accounts-grid">
+                    <!-- Twitter/X Account -->
+                    <div class="account-card" data-platform="twitter">
+                        <div class="account-header">
+                            <div class="account-info">
+                                <div class="account-icon twitter">
+                                    <i class="fab fa-x-twitter"></i>
+                                </div>
+                                <div>
+                                    <h3>Twitter / X</h3>
+                                    <p class="account-status">Not connected</p>
+                                </div>
+                            </div>
+                            <button class="btn-connect btn-outline" data-platform="twitter">
+                                <i class="fas fa-plus"></i> Connect
+                            </button>
+                        </div>
+                        <div class="account-details">
+                            <div class="connection-info">
+                                <span class="no-accounts">No accounts connected</span>
+                            </div>
+                        </div>
                     </div>
-                    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
-                        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Connect New Account</h3>
-                        <div class="platform-selection">
-                            <button class="btn" onclick="alert('Twitter OAuth integration coming soon!')">
-                                <i class="fab fa-twitter"></i> Connect Twitter
+
+                    <!-- LinkedIn Account -->
+                    <div class="account-card" data-platform="linkedin">
+                        <div class="account-header">
+                            <div class="account-info">
+                                <div class="account-icon linkedin">
+                                    <i class="fab fa-linkedin"></i>
+                                </div>
+                                <div>
+                                    <h3>LinkedIn</h3>
+                                    <p class="account-status">Not connected</p>
+                                </div>
+                            </div>
+                            <button class="btn-connect btn-outline" data-platform="linkedin">
+                                <i class="fas fa-plus"></i> Connect
                             </button>
-                            <button class="btn" onclick="alert('LinkedIn OAuth integration coming soon!')">
-                                <i class="fab fa-linkedin"></i> Connect LinkedIn
+                        </div>
+                        <div class="account-details">
+                            <div class="connection-info">
+                                <span class="no-accounts">No accounts connected</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Facebook Account -->
+                    <div class="account-card" data-platform="facebook">
+                        <div class="account-header">
+                            <div class="account-info">
+                                <div class="account-icon facebook">
+                                    <i class="fab fa-facebook"></i>
+                                </div>
+                                <div>
+                                    <h3>Facebook</h3>
+                                    <p class="account-status">Not connected</p>
+                                </div>
+                            </div>
+                            <button class="btn-connect btn-outline" data-platform="facebook">
+                                <i class="fas fa-plus"></i> Connect
                             </button>
-                            <button class="btn" onclick="alert('Facebook OAuth integration coming soon!')">
-                                <i class="fab fa-facebook"></i> Connect Facebook
-                            </button>
-                            <button class="btn" onclick="alert('Instagram OAuth integration coming soon!')">
-                                <i class="fab fa-instagram"></i> Connect Instagram
-                            </button>
+                        </div>
+                        <div class="account-details">
+                            <div class="connection-info">
+                                <span class="no-accounts">No accounts connected</span>
+                            </div>
                         </div>
                     </div>
                 </div>
