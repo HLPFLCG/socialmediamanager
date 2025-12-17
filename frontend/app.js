@@ -732,3 +732,245 @@ let socialMediaManager;
 document.addEventListener('DOMContentLoaded', () => {
     socialMediaManager = new SocialMediaManager();
 });
+// Social Accounts Management
+function initializeSocialAccounts() {
+    // Add event listeners to connect buttons
+    document.querySelectorAll('.btn-connect').forEach(button => {
+        button.addEventListener('click', async (e) => {
+            const platform = e.currentTarget.dataset.platform;
+            await connectSocialAccount(platform);
+        });
+    });
+
+    // Add event listeners to disconnect buttons
+    document.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('btn-disconnect')) {
+            const platform = e.target.dataset.platform;
+            await disconnectSocialAccount(platform);
+        }
+    });
+
+    // Load accounts on page load
+    loadSocialAccounts();
+}
+
+async function loadSocialAccounts() {
+    // Show loading state
+    document.querySelectorAll('.account-status').forEach(status => {
+        status.textContent = 'Loading...';
+    });
+    document.querySelectorAll('.connection-info').forEach(info => {
+        info.innerHTML = '<div class="oauth-loading"><i class="fas fa-spinner fa-spin"></i><span>Loading...</span></div>';
+    });
+
+    try {
+        // Load actual connected accounts from API
+        const response = await fetch(`${API_BASE_URL}/api/social/accounts`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load accounts');
+        }
+
+        const accounts = await response.json();
+        updateAccountCards(accounts);
+
+    } catch (error) {
+        console.error('Failed to load accounts:', error);
+        // Reset to disconnected state
+        updateAccountCards([]);
+    }
+}
+
+function updateAccountCards(accounts) {
+    // Reset all cards to disconnected state first
+    document.querySelectorAll('.account-card').forEach(card => {
+        const platform = card.dataset.platform;
+        const statusElement = card.querySelector('.account-status');
+        const button = card.querySelector('.btn-connect, .btn-disconnect');
+        const connectionInfo = card.querySelector('.connection-info');
+        
+        statusElement.textContent = 'Not connected';
+        statusElement.className = 'account-status';
+        button.innerHTML = '<i class="fas fa-plus"></i> Connect';
+        button.classList.remove('btn-disconnect');
+        button.classList.add('btn-connect', 'btn-outline');
+        button.dataset.platform = platform;
+        connectionInfo.innerHTML = '<span class="no-accounts">No accounts connected</span>';
+    });
+
+    // Update cards with connected accounts
+    accounts.forEach(account => {
+        const card = document.querySelector(`.account-card[data-platform="${account.platform}"]`);
+        if (!card) return;
+
+        const statusElement = card.querySelector('.account-status');
+        const button = card.querySelector('.btn-connect, .btn-disconnect');
+        const connectionInfo = card.querySelector('.connection-info');
+        
+        statusElement.textContent = 'Connected';
+        statusElement.className = 'account-status connected';
+        button.innerHTML = '<i class="fas fa-times"></i> Disconnect';
+        button.classList.remove('btn-connect', 'btn-outline');
+        button.classList.add('btn-disconnect');
+        button.dataset.platform = account.platform;
+        
+        connectionInfo.innerHTML = `
+            <div class="connected-account">
+                <div class="account-user">
+                    <strong>${account.username || account.display_name || 'Account'}</strong>
+                    <span class="account-id">ID: ${account.platform_user_id}</span>
+                </div>
+                <div class="account-stats">
+                    <span>Connected: ${new Date(account.created_at).toLocaleDateString()}</span>
+                </div>
+            </div>
+        `;
+    });
+}
+
+async function connectSocialAccount(platform) {
+    try {
+        // Show loading state
+        const button = document.querySelector(`.btn-connect[data-platform="${platform}"]`);
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+        button.disabled = true;
+
+        // Get current user
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        // Initiate OAuth flow
+        const response = await fetch(`${API_BASE_URL}/oauth/${platform}/authorize?user_id=${user.id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to initiate OAuth flow');
+        }
+
+        const data = await response.json();
+        
+        // Redirect to OAuth provider
+        if (data.authorization_url) {
+            window.location.href = data.authorization_url;
+        } else {
+            throw new Error('No authorization URL received');
+        }
+
+    } catch (error) {
+        console.error('Connection error:', error);
+        showNotification('Failed to connect account. Please try again.', 'error');
+        
+        // Reset button
+        const button = document.querySelector(`.btn-connect[data-platform="${platform}"]`);
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+
+async function disconnectSocialAccount(platform) {
+    try {
+        if (!confirm('Are you sure you want to disconnect this account?')) {
+            return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/social/accounts/${platform}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to disconnect account');
+        }
+
+        showNotification('Account disconnected successfully', 'success');
+        loadSocialAccounts(); // Refresh the accounts list
+
+    } catch (error) {
+        console.error('Disconnection error:', error);
+        showNotification('Failed to disconnect account', 'error');
+    }
+}
+
+// Handle OAuth callback
+function handleOAuthCallback() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const platform = urlParams.get('platform');
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    const error = urlParams.get('error');
+
+    if (platform && (code || error)) {
+        if (error) {
+            console.error('OAuth error:', error);
+            showNotification('Authentication failed', 'error');
+            return;
+        }
+
+        // Exchange code for token
+        exchangeCodeForToken(platform, code, state);
+    }
+}
+
+async function exchangeCodeForToken(platform, code, state) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/oauth/${platform}/callback`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ code, state })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to exchange code for token');
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(`${platform.charAt(0).toUpperCase() + platform.slice(1)} connected successfully!`, 'success');
+            // Reload accounts after a short delay
+            setTimeout(() => {
+                loadSocialAccounts();
+            }, 1000);
+        } else {
+            showNotification('Failed to connect account', 'error');
+        }
+
+    } catch (error) {
+        console.error('Token exchange error:', error);
+        showNotification('Failed to connect account', 'error');
+    }
+}
+
+// Initialize social accounts when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Handle OAuth callback on page load
+    handleOAuthCallback();
+    
+    // Initialize social accounts if on accounts page
+    if (window.location.hash === '#accounts' || document.getElementById('accounts')) {
+        setTimeout(() => {
+            initializeSocialAccounts();
+        }, 100);
+    }
+});
+
+// Make refreshAccounts function globally available
+function refreshAccounts() {
+    loadSocialAccounts();
+    showNotification('Accounts refreshed', 'info');
+}
+
+console.log('Social Accounts functionality loaded');
