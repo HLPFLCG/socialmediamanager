@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HLPFL Social Media Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+    <!-- Authentication Modal -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-modal-content">
+            <div class="auth-header">
+                <h1>HLPFL</h1>
+                <p>Social Media Manager</p>
+            </div>
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Login</button>
+                <button class="auth-tab" data-tab="register">Register</button>
+            </div>
+            <form id="authForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" required placeholder="••••••••">
+                </div>
+                <div class="form-group" id="nameGroup" style="display: none;">
+                    <label for="name">Name</label>
+                    <input type="text" class="form-control" id="name" name="name" placeholder="Your Name">
+                </div>
+                <button type="submit" class="btn btn-primary" id="authSubmit">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div class="app-container" id="appContainer" style="display: none;">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>HLPFL</h1>
+                <p>Social Media Manager</p>
+                <div class="user-info" id="userInfo"></div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="#compose" class="nav-item" data-section="compose">
+                    <i class="fas fa-pen"></i> Create Post
+                </a>
+                <a href="#accounts" class="nav-item" data-section="accounts">
+                    <i class="fas fa-user-circle"></i> Social Accounts
+                </a>
+                <a href="#analytics" class="nav-item" data-section="analytics">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </a>
+                <a href="#scheduler" class="nav-item" data-section="scheduler">
+                    <i class="fas fa-calendar"></i> Scheduler
+                </a>
+                <a href="#media" class="nav-item" data-section="media">
+                    <i class="fas fa-images"></i> Media Library
+                </a>
+                <a href="#settings" class="nav-item" data-section="settings">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+                <a href="#" class="nav-item" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="main-section active">
+                <div class="section-header">
+                    <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <h3>Total Posts</h3>
+                        <div class="stat-value" id="totalPosts">0</div>
+                        <div class="stat-change">All time</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Published</h3>
+                        <div class="stat-value" id="publishedPosts">0</div>
+                        <div class="stat-change">Last 7 days</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Scheduled</h3>
+                        <div class="stat-value" id="scheduledPosts">0</div>
+                        <div class="stat-change">Upcoming</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Reach</h3>
+                        <div class="stat-value" id="reach">0</div>
+                        <div class="stat-change">Total impressions</div>
+                    </div>
+                </div>
+                <div class="compose-form">
+                    <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Recent Posts</h3>
+                    <div id="recentPosts">
+                        <div class="loading"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Compose Section -->
+            <section id="compose" class="main-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-pen"></i> Create Post</h2>
+                </div>
+                <form class="compose-form" id="postForm">
+                    <div class="form-group">
+                        <label for="postContent">Post Content</label>
+                        <textarea class="form-control" id="postContent" placeholder="What would you like to share?" rows="6"></textarea>
+                        <div class="character-count" id="characterCount">0 characters</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Platforms</label>
+                        <div class="platform-selection">
+                            <div class="platform-option">
+                                <input type="checkbox" id="twitter" class="platform-checkbox" value="twitter">
+                                <label for="twitter"><i class="fab fa-twitter"></i> Twitter</label>
+                            </div>
+                            <div class="platform-option">
+                                <input type="checkbox" id="linkedin" class="platform-checkbox" value="linkedin">
+                                <label for="linkedin"><i class="fab fa-linkedin"></i> LinkedIn</label>
+                            </div>
+                            <div class="platform-option">
+                                <input type="checkbox" id="facebook" class="platform-checkbox" value="facebook">
+                                <label for="facebook"><i class="fab fa-facebook"></i> Facebook</label>
+                            </div>
+                            <div class="platform-option">
+                                <input type="checkbox" id="instagram" class="platform-checkbox" value="instagram">
+                                <label for="instagram"><i class="fab fa-instagram"></i> Instagram</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Publish Now
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Social Accounts Section -->
+            <section id="accounts" class="main-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-user-circle"></i> Connected Social Accounts</h2>
+                </div>
+                <div class="compose-form">
+                    <div id="connectedAccounts">
+                        <div class="loading"></div>
+                    </div>
+                    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Connect New Account</h3>
+                        <div class="platform-selection">
+                            <button class="btn" onclick="alert('Twitter OAuth integration coming soon!')">
+                                <i class="fab fa-twitter"></i> Connect Twitter
+                            </button>
+                            <button class="btn" onclick="alert('LinkedIn OAuth integration coming soon!')">
+                                <i class="fab fa-linkedin"></i> Connect LinkedIn
+                            </button>
+                            <button class="btn" onclick="alert('Facebook OAuth integration coming soon!')">
+                                <i class="fab fa-facebook"></i> Connect Facebook
+                            </button>
+                            <button class="btn" onclick="alert('Instagram OAuth integration coming soon!')">
+                                <i class="fab fa-instagram"></i> Connect Instagram
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics" class="main-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-chart-line"></i> Analytics</h2>
+                </div>
+                <div class="compose-form" id="analyticsContent">
+                    <div class="loading"></div>
+                </div>
+            </section>
+
+            <!-- Scheduler Section -->
+            <section id="scheduler" class="main-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-calendar"></i> Content Scheduler</h2>
+                </div>
+                <div class="compose-form">
+                    <div id="scheduledPostsList">
+                        <div class="loading"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Media Library Section -->
+            <section id="media" class="main-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-images"></i> Media Library</h2>
+                </div>
+                <div class="compose-form">
+                    <div class="empty-state">
+                        <i class="fas fa-images"></i>
+                        <h3>Media Library</h3>
+                        <p>Upload and manage your media files for social posts. Coming soon!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="main-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-cog"></i> Settings</h2>
+                </div>
+                <div class="compose-form">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Profile Settings</h3>
+                    <form id="settingsForm">
+                        <div class="form-group">
+                            <label for="settingsName">Name</label>
+                            <input type="text" class="form-control" id="settingsName" placeholder="Your Name">
+                        </div>
+                        <div class="form-group">
+                            <label for="settingsEmail">Email</label>
+                            <input type="email" class="form-control" id="settingsEmail" placeholder="your@email.com" disabled>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Settings
+                            </button>
+                        </div>
+                    </form>
+
+                    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Change Password</h3>
+                        <form id="passwordForm">
+                            <div class="form-group">
+                                <label for="currentPassword">Current Password</label>
+                                <input type="password" class="form-control" id="currentPassword" placeholder="••••••••">
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <input type="password" class="form-control" id="newPassword" placeholder="••••••••">
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirmPassword" placeholder="••••••••">
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-key"></i> Change Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
