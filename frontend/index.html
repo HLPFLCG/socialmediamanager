@@ -9,12 +9,12 @@
 <script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
 </head>
 <body>
-    <!-- Authentication Modal (shown by default when not logged in) -->
+    <!-- Authentication Modal -->
     <div class="auth-modal" id="authModal">
         <div class="auth-modal-content">
             <div class="auth-header">
-                <h1><i class="fas fa-share-alt"></i> HLPFL Social</h1>
-                <p>Enterprise Social Media Manager</p>
+                <h1>HLPFL</h1>
+                <p>Social Media Manager</p>
             </div>
             <div class="auth-tabs">
                 <button class="auth-tab active" data-tab="login">Login</button>
@@ -23,27 +23,29 @@
             <form id="authForm">
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" class="form-control" id="email" name="email" required>
+                    <input type="email" class="form-control" id="email" name="email" required placeholder="your@email.com">
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
+                    <input type="password" class="form-control" id="password" name="password" required placeholder="••••••••">
                 </div>
                 <div class="form-group" id="nameGroup" style="display: none;">
                     <label for="name">Name</label>
-                    <input type="text" class="form-control" id="name" name="name">
+                    <input type="text" class="form-control" id="name" name="name" placeholder="Your Name">
                 </div>
-                <button type="submit" class="btn btn-primary" id="authSubmit">Login</button>
+                <button type="submit" class="btn btn-primary" id="authSubmit">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
             </form>
         </div>
     </div>
 
-    <!-- Main Application (hidden until logged in) -->
+    <!-- Main Application -->
     <div class="app-container" id="appContainer" style="display: none;">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h1><i class="fas fa-share-alt"></i> HLPFL Social</h1>
-                <p>Enterprise Manager</p>
+                <h1>HLPFL</h1>
+                <p>Social Media Manager</p>
                 <div class="user-info" id="userInfo"></div>
             </div>
             <nav class="sidebar-nav">
@@ -84,27 +86,29 @@
                     <div class="stat-card">
                         <h3>Total Posts</h3>
                         <div class="stat-value" id="totalPosts">0</div>
-                        <div class="stat-change">+12% from last month</div>
+                        <div class="stat-change">All time</div>
                     </div>
                     <div class="stat-card">
                         <h3>Published</h3>
                         <div class="stat-value" id="publishedPosts">0</div>
-                        <div class="stat-change">+8% from last month</div>
+                        <div class="stat-change">Last 7 days</div>
                     </div>
                     <div class="stat-card">
                         <h3>Scheduled</h3>
                         <div class="stat-value" id="scheduledPosts">0</div>
-                        <div class="stat-change">3 posts pending</div>
+                        <div class="stat-change">Upcoming</div>
                     </div>
                     <div class="stat-card">
                         <h3>Reach</h3>
                         <div class="stat-value" id="reach">0</div>
-                        <div class="stat-change">+25% from last month</div>
+                        <div class="stat-change">Total impressions</div>
                     </div>
                 </div>
                 <div class="compose-form">
-                    <h3>Recent Posts</h3>
-                    <div id="recentPosts"><p>Loading recent posts...</p></div>
+                    <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Recent Posts</h3>
+                    <div id="recentPosts">
+                        <div class="loading"></div>
+                    </div>
                 </div>
             </section>
 
@@ -116,7 +120,7 @@
                 <form class="compose-form" id="postForm">
                     <div class="form-group">
                         <label for="postContent">Post Content</label>
-                        <textarea class="form-control" id="postContent" placeholder="What would you like to share?" rows="4"></textarea>
+                        <textarea class="form-control" id="postContent" placeholder="What would you like to share?" rows="6"></textarea>
                         <div class="character-count" id="characterCount">0 characters</div>
                     </div>
                     <div class="form-group">
@@ -142,55 +146,122 @@
                     </div>
                     <div class="form-group">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane"></i> Publish Post
+                            <i class="fas fa-paper-plane"></i> Publish Now
                         </button>
                     </div>
                 </form>
             </section>
 
-            <!-- Other Sections -->
+            <!-- Social Accounts Section -->
             <section id="accounts" class="main-section">
                 <div class="section-header">
                     <h2><i class="fas fa-user-circle"></i> Connected Social Accounts</h2>
                 </div>
                 <div class="compose-form">
-                    <div id="connectedAccounts"><p>Loading connected accounts...</p></div>
+                    <div id="connectedAccounts">
+                        <div class="loading"></div>
+                    </div>
+                    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Connect New Account</h3>
+                        <div class="platform-selection">
+                            <button class="btn" onclick="alert('Twitter OAuth integration coming soon!')">
+                                <i class="fab fa-twitter"></i> Connect Twitter
+                            </button>
+                            <button class="btn" onclick="alert('LinkedIn OAuth integration coming soon!')">
+                                <i class="fab fa-linkedin"></i> Connect LinkedIn
+                            </button>
+                            <button class="btn" onclick="alert('Facebook OAuth integration coming soon!')">
+                                <i class="fab fa-facebook"></i> Connect Facebook
+                            </button>
+                            <button class="btn" onclick="alert('Instagram OAuth integration coming soon!')">
+                                <i class="fab fa-instagram"></i> Connect Instagram
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </section>
 
+            <!-- Analytics Section -->
             <section id="analytics" class="main-section">
                 <div class="section-header">
                     <h2><i class="fas fa-chart-line"></i> Analytics</h2>
                 </div>
-                <div class="compose-form">
-                    <p>Analytics dashboard coming soon...</p>
+                <div class="compose-form" id="analyticsContent">
+                    <div class="loading"></div>
                 </div>
             </section>
 
+            <!-- Scheduler Section -->
             <section id="scheduler" class="main-section">
                 <div class="section-header">
                     <h2><i class="fas fa-calendar"></i> Content Scheduler</h2>
                 </div>
                 <div class="compose-form">
-                    <p>Content scheduler coming soon...</p>
+                    <div id="scheduledPostsList">
+                        <div class="loading"></div>
+                    </div>
                 </div>
             </section>
 
+            <!-- Media Library Section -->
             <section id="media" class="main-section">
                 <div class="section-header">
                     <h2><i class="fas fa-images"></i> Media Library</h2>
                 </div>
                 <div class="compose-form">
-                    <p>Media library coming soon...</p>
+                    <div class="empty-state">
+                        <i class="fas fa-images"></i>
+                        <h3>Media Library</h3>
+                        <p>Upload and manage your media files for social posts. Coming soon!</p>
+                    </div>
                 </div>
             </section>
 
+            <!-- Settings Section -->
             <section id="settings" class="main-section">
                 <div class="section-header">
                     <h2><i class="fas fa-cog"></i> Settings</h2>
                 </div>
                 <div class="compose-form">
-                    <p>Settings panel coming soon...</p>
+                    <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Profile Settings</h3>
+                    <form id="settingsForm">
+                        <div class="form-group">
+                            <label for="settingsName">Name</label>
+                            <input type="text" class="form-control" id="settingsName" placeholder="Your Name">
+                        </div>
+                        <div class="form-group">
+                            <label for="settingsEmail">Email</label>
+                            <input type="email" class="form-control" id="settingsEmail" placeholder="your@email.com" disabled>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Settings
+                            </button>
+                        </div>
+                    </form>
+
+                    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Change Password</h3>
+                        <form id="passwordForm">
+                            <div class="form-group">
+                                <label for="currentPassword">Current Password</label>
+                                <input type="password" class="form-control" id="currentPassword" placeholder="••••••••">
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <input type="password" class="form-control" id="newPassword" placeholder="••••••••">
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirmPassword" placeholder="••••••••">
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-key"></i> Change Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </section>
         </main>

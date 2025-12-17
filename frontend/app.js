@@ -8,6 +8,7 @@ class SocialMediaManager {
         this.token = localStorage.getItem('token');
         this.selectedPlatforms = [];
         this.uploadedMedia = [];
+        this.scheduledPosts = [];
         this.init();
     }
 
@@ -96,6 +97,24 @@ class SocialMediaManager {
         const postContent = document.getElementById('postContent');
         if (postContent) {
             postContent.addEventListener('input', () => this.updateCharacterCount());
+        }
+
+        // Settings form
+        const settingsForm = document.getElementById('settingsForm');
+        if (settingsForm) {
+            settingsForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveSettings();
+            });
+        }
+
+        // Password change form
+        const passwordForm = document.getElementById('passwordForm');
+        if (passwordForm) {
+            passwordForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.changePassword();
+            });
         }
     }
 
@@ -220,23 +239,24 @@ class SocialMediaManager {
         if (!postsContainer || !Array.isArray(posts)) return;
 
         if (posts.length === 0) {
-            postsContainer.innerHTML = '<p>No posts yet. Create your first post!</p>';
+            postsContainer.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><h3>No posts yet</h3><p>Create your first post to get started!</p></div>';
             return;
         }
 
         postsContainer.innerHTML = posts.map(post => `
-            <div style="padding: 1rem; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 1rem;">
+            <div class="post-card">
                 <p>${this.truncateText(post.content, 100)}</p>
-                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                <div class="post-platforms">
                     ${post.platforms.map(platform => `
-                        <span style="background: var(--primary); color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem;">
-                            ${platform}
+                        <span class="platform-badge">
+                            <i class="fab fa-${platform}"></i> ${platform}
                         </span>
                     `).join('')}
                 </div>
-                <small style="color: var(--secondary); margin-top: 0.5rem; display: block;">
-                    ${new Date(post.created_at).toLocaleDateString()}
-                </small>
+                <div class="post-meta">
+                    <span class="post-status status-${post.status}">${post.status}</span>
+                    <small>${new Date(post.created_at).toLocaleDateString()}</small>
+                </div>
             </div>
         `).join('');
     }
@@ -246,19 +266,22 @@ class SocialMediaManager {
         if (!accountsContainer) return;
 
         if (!Array.isArray(accounts) || accounts.length === 0) {
-            accountsContainer.innerHTML = '<p>No connected accounts. Connect your social media accounts to start posting!</p>';
+            accountsContainer.innerHTML = '<div class="empty-state"><i class="fas fa-link"></i><h3>No connected accounts</h3><p>Connect your social media accounts to start posting!</p></div>';
             return;
         }
 
         accountsContainer.innerHTML = accounts.map(account => `
-            <div style="padding: 1rem; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <i class="fab fa-${account.platform}" style="font-size: 1.5rem;"></i>
-                    <span>${account.username || account.platform}</span>
+            <div class="account-card">
+                <div class="account-info">
+                    <i class="fab fa-${account.platform}" style="font-size: 1.5rem; color: var(--accent-orange);"></i>
+                    <div>
+                        <strong>${account.username || account.platform}</strong>
+                        <small>${account.platform}</small>
+                    </div>
                 </div>
-                <span style="background: var(--success); color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem;">
-                    Connected
-                </span>
+                <button class="btn" onclick="socialMediaManager.disconnectAccount(${account.id})">
+                    <i class="fas fa-unlink"></i> Disconnect
+                </button>
             </div>
         `).join('');
     }
@@ -316,6 +339,231 @@ class SocialMediaManager {
         }
     }
 
+    async loadAnalytics() {
+        try {
+            const response = await this.apiCall('/analytics');
+            if (response.success) {
+                this.displayAnalytics(response.analytics);
+            }
+        } catch (error) {
+            console.error('Failed to load analytics:', error);
+            this.showNotification('Failed to load analytics', 'error');
+        }
+    }
+
+    displayAnalytics(analytics) {
+        const analyticsContainer = document.getElementById('analyticsContent');
+        if (!analyticsContainer) return;
+
+        analyticsContainer.innerHTML = `
+            <div class="analytics-grid">
+                <div class="stat-card">
+                    <h3>Total Posts</h3>
+                    <div class="stat-value">${analytics.totalPosts}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Published</h3>
+                    <div class="stat-value">${analytics.publishedPosts}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Scheduled</h3>
+                    <div class="stat-value">${analytics.scheduledPosts}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Drafts</h3>
+                    <div class="stat-value">${analytics.draftPosts}</div>
+                </div>
+            </div>
+            
+            <div class="analytics-section">
+                <h3>Platform Breakdown</h3>
+                <div class="platform-stats">
+                    ${Object.entries(analytics.platformBreakdown).map(([platform, count]) => `
+                        <div class="platform-stat">
+                            <i class="fab fa-${platform}"></i>
+                            <span>${platform}</span>
+                            <strong>${count}</strong>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            
+            <div class="analytics-section">
+                <h3>Engagement Metrics</h3>
+                <div class="engagement-grid">
+                    <div class="metric-card">
+                        <i class="fas fa-eye"></i>
+                        <div>
+                            <strong>${analytics.engagementMetrics.totalViews.toLocaleString()}</strong>
+                            <span>Total Views</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <i class="fas fa-heart"></i>
+                        <div>
+                            <strong>${analytics.engagementMetrics.totalLikes.toLocaleString()}</strong>
+                            <span>Total Likes</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <i class="fas fa-share"></i>
+                        <div>
+                            <strong>${analytics.engagementMetrics.totalShares.toLocaleString()}</strong>
+                            <span>Total Shares</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <i class="fas fa-comment"></i>
+                        <div>
+                            <strong>${analytics.engagementMetrics.totalComments.toLocaleString()}</strong>
+                            <span>Total Comments</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async loadScheduler() {
+        try {
+            const response = await this.apiCall('/posts/scheduled');
+            if (response.success) {
+                this.scheduledPosts = response.posts;
+                this.displayScheduledPosts();
+            }
+        } catch (error) {
+            console.error('Failed to load scheduled posts:', error);
+            this.showNotification('Failed to load scheduled posts', 'error');
+        }
+    }
+
+    displayScheduledPosts() {
+        const schedulerContainer = document.getElementById('scheduledPostsList');
+        if (!schedulerContainer) return;
+
+        if (this.scheduledPosts.length === 0) {
+            schedulerContainer.innerHTML = '<div class="empty-state"><i class="fas fa-calendar"></i><h3>No scheduled posts</h3><p>Schedule posts to publish them automatically!</p></div>';
+            return;
+        }
+
+        schedulerContainer.innerHTML = this.scheduledPosts.map(post => `
+            <div class="scheduled-post-card">
+                <div class="post-content">
+                    <p>${this.truncateText(post.content, 150)}</p>
+                    <div class="post-platforms">
+                        ${post.platforms.map(p => `<span class="platform-badge"><i class="fab fa-${p}"></i> ${p}</span>`).join('')}
+                    </div>
+                </div>
+                <div class="post-schedule">
+                    <div class="schedule-time">
+                        <i class="fas fa-clock"></i>
+                        <span>${new Date(post.scheduled_at).toLocaleString()}</span>
+                    </div>
+                    <div class="post-actions">
+                        <button class="btn" onclick="socialMediaManager.editScheduledPost(${post.id})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn" onclick="socialMediaManager.cancelScheduledPost(${post.id})">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async cancelScheduledPost(postId) {
+        if (!confirm('Are you sure you want to cancel this scheduled post?')) return;
+
+        try {
+            const response = await this.apiCall(`/posts/scheduled/${postId}`, 'DELETE');
+            if (response.success) {
+                this.showNotification('Scheduled post cancelled', 'success');
+                await this.loadScheduler();
+            }
+        } catch (error) {
+            console.error('Failed to cancel post:', error);
+            this.showNotification('Failed to cancel post', 'error');
+        }
+    }
+
+    async loadSettings() {
+        try {
+            const response = await this.apiCall('/user/settings');
+            if (response.success) {
+                this.displaySettings(response.settings);
+            }
+        } catch (error) {
+            console.error('Failed to load settings:', error);
+            this.showNotification('Failed to load settings', 'error');
+        }
+    }
+
+    displaySettings(settings) {
+        const nameInput = document.getElementById('settingsName');
+        const emailInput = document.getElementById('settingsEmail');
+        
+        if (nameInput) nameInput.value = settings.name || '';
+        if (emailInput) emailInput.value = settings.email || '';
+    }
+
+    async saveSettings() {
+        const name = document.getElementById('settingsName').value;
+        
+        try {
+            const response = await this.apiCall('/user/settings', 'PUT', { name });
+            if (response.success) {
+                this.showNotification('Settings saved successfully', 'success');
+                this.currentUser.name = name;
+                this.showApp(); // Update user info display
+            }
+        } catch (error) {
+            console.error('Failed to save settings:', error);
+            this.showNotification('Failed to save settings', 'error');
+        }
+    }
+
+    async changePassword() {
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (newPassword !== confirmPassword) {
+            this.showNotification('New passwords do not match', 'error');
+            return;
+        }
+
+        try {
+            const response = await this.apiCall('/user/change-password', 'POST', {
+                currentPassword,
+                newPassword
+            });
+
+            if (response.success) {
+                this.showNotification('Password changed successfully', 'success');
+                document.getElementById('passwordForm').reset();
+            }
+        } catch (error) {
+            console.error('Failed to change password:', error);
+            this.showNotification(error.message, 'error');
+        }
+    }
+
+    async disconnectAccount(accountId) {
+        if (!confirm('Are you sure you want to disconnect this account?')) return;
+
+        try {
+            const response = await this.apiCall(`/social/accounts/${accountId}`, 'DELETE');
+            if (response.success) {
+                this.showNotification('Account disconnected', 'success');
+                await this.loadDashboard();
+            }
+        } catch (error) {
+            console.error('Failed to disconnect account:', error);
+            this.showNotification('Failed to disconnect account', 'error');
+        }
+    }
+
     navigateToSection(section) {
         // Hide all sections
         document.querySelectorAll('.main-section').forEach(s => {
@@ -336,6 +584,15 @@ class SocialMediaManager {
         const activeNavItem = document.querySelector(`[data-section="${section}"]`);
         if (activeNavItem) {
             activeNavItem.classList.add('active');
+        }
+
+        // Load section-specific data
+        if (section === 'analytics') {
+            this.loadAnalytics();
+        } else if (section === 'scheduler') {
+            this.loadScheduler();
+        } else if (section === 'settings') {
+            this.loadSettings();
         }
     }
 
@@ -372,7 +629,7 @@ class SocialMediaManager {
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
-        notification.textContent = message;
+        notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i> ${message}`;
         document.body.appendChild(notification);
 
         setTimeout(() => {
@@ -390,6 +647,7 @@ class SocialMediaManager {
 }
 
 // Initialize the application when DOM is ready
+let socialMediaManager;
 document.addEventListener('DOMContentLoaded', () => {
-    new SocialMediaManager();
+    socialMediaManager = new SocialMediaManager();
 });
