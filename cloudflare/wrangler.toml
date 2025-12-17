@@ -4,12 +4,6 @@ compatibility_date = "2024-12-17"
 compatibility_flags = ["nodejs_compat"]
 account_id = "8c74a072236761cf6126371f0b20c5a9"
 
-# Custom domain routes (configured manually in dashboard)
-# routes = [
-#   { pattern = "api.hlpfl.space/*", zone_name = "hlpfl.space" },
-#   { pattern = "hlpfl.space/api/*", zone_name = "hlpfl.space" }
-# ]
-
 [vars]
 NODE_ENV = "development"
 ALLOWED_ORIGINS = "https://hlpfl.space,https://socialmediamanager-api-production.hlpfl-co.workers.dev"
@@ -19,17 +13,6 @@ ALLOWED_ORIGINS = "https://hlpfl.space,https://socialmediamanager-api-production
 binding = "DB"
 database_name = "socialmediamanager-db"
 database_id = "8860d9ea-f18a-422d-b409-f641edd83fd0"
-
-# IMPORTANT: Set these secrets using wrangler CLI or Cloudflare dashboard:
-# wrangler secret put JWT_SECRET --env production
-# wrangler secret put TWITTER_API_KEY --env production
-# wrangler secret put TWITTER_API_SECRET --env production
-# wrangler secret put LINKEDIN_CLIENT_ID --env production
-# wrangler secret put LINKEDIN_CLIENT_SECRET --env production
-# wrangler secret put FACEBOOK_APP_ID --env production
-# wrangler secret put FACEBOOK_APP_SECRET --env production
-# wrangler secret put INSTAGRAM_CLIENT_ID --env production
-# wrangler secret put INSTAGRAM_CLIENT_SECRET --env production
 
 [env.production]
 name = "socialmediamanager-api-production"
@@ -42,17 +25,4 @@ ALLOWED_ORIGINS = "https://hlpfl.space,https://socialmediamanager-api-production
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "socialmediamanager-db"
-database_id = "8860d9ea-f18a-422d-b409-f641edd83fd0"
-
-[env.staging]
-name = "socialmediamanager-api-staging"
-
-[env.staging.vars]
-ENVIRONMENT = "staging"
-NODE_ENV = "staging"
-ALLOWED_ORIGINS = "*"
-
-[[env.staging.d1_databases]]
-binding = "DB"
-database_name = "socialmediamanager-db-staging"
 database_id = "8860d9ea-f18a-422d-b409-f641edd83fd0"
