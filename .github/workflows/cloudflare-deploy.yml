@@ -21,18 +21,17 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Wrangler
-        run: npm install -g wrangler
-
       - name: Install Dependencies
         run: |
           cd cloudflare
-          npm install
+          npm ci
 
       - name: Deploy to Workers
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           cd cloudflare
-          CLOUDFLARE_API_TOKEN=JRtvDTpOIWhAxPjt_fEYBOD1-i8jvt1zcQEv-_cj wrangler deploy --env production
+          npx wrangler deploy --env production
 
   deploy-frontend:
     runs-on: ubuntu-latest
@@ -50,5 +49,6 @@ jobs:
 
       - name: Deploy to Pages
         run: |
-          echo "Frontend is already embedded in the Workers API"
-          echo "Access the dashboard at: https://socialmediamanager-api-production.hlpfl-co.workers.dev/"
+          echo "✅ Frontend is embedded in the Workers API"
+          echo "🌐 Access the dashboard at: https://socialmediamanager-api-production.hlpfl-co.workers.dev/"
+          echo "🌐 Or at: https://hlpfl.space"
