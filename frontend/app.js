@@ -9,6 +9,7 @@ class SocialMediaManager {
         this.selectedPlatforms = [];
         this.uploadedMedia = [];
         this.scheduledPosts = [];
+        this.connectedAccounts = [];
         this.init();
     }
 
@@ -211,6 +212,7 @@ class SocialMediaManager {
             this.updateDashboardStats(statsResponse);
             this.updateRecentPosts(statsResponse.recentPosts);
             this.updateConnectedAccounts(statsResponse.socialAccounts);
+            this.loadConnectedAccounts();
         } catch (error) {
             console.error('Failed to load dashboard:', error);
             this.showNotification('Failed to load dashboard data', 'error');
@@ -643,6 +645,85 @@ class SocialMediaManager {
         this.currentUser = null;
         this.showAuthModal();
         this.showNotification('Logged out successfully', 'info');
+    }
+
+    // OAuth Methods
+    connectSocialAccount(platform) {
+        const baseUrl = window.location.origin;
+        const authUrl = `${baseUrl}/auth/${platform}/authorize`;
+        window.open(authUrl, '_blank', 'width=600,height=600');
+    }
+
+    async loadConnectedAccounts() {
+        try {
+            const response = await this.apiCall('/social/accounts');
+            this.connectedAccounts = response.accounts || [];
+            this.updateConnectedAccountsUI();
+        } catch (error) {
+            console.error('Failed to load connected accounts:', error);
+        }
+    }
+
+    updateConnectedAccountsUI() {
+        const accountsContainer = document.getElementById('connectedAccounts');
+        if (!accountsContainer) return;
+
+        const platforms = ['twitter', 'linkedin', 'facebook', 'instagram', 'tiktok', 'youtube', 'pinterest'];
+        
+        let html = '<div class="social-accounts-grid">';
+        
+        platforms.forEach(platform => {
+            const isConnected = this.connectedAccounts.some(acc => acc.platform === platform);
+            const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
+            const iconClass = this.getPlatformIcon(platform);
+            
+            html += `
+                <div class="social-account-card ${isConnected ? 'connected' : ''}">
+                    <div class="account-info">
+                        <i class="${iconClass}"></i>
+                        <span>${platformName}</span>
+                    </div>
+                    <div class="account-actions">
+                        ${isConnected 
+                            ? `<button class="btn btn-small btn-danger" onclick="socialMediaManager.disconnectAccount('${platform}')">Disconnect</button>`
+                            : `<button class="btn btn-small btn-primary" onclick="socialMediaManager.connectSocialAccount('${platform}')">Connect</button>`
+                        }
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        accountsContainer.innerHTML = html;
+    }
+
+    getPlatformIcon(platform) {
+        const icons = {
+            twitter: 'fab fa-twitter',
+            linkedin: 'fab fa-linkedin',
+            facebook: 'fab fa-facebook',
+            instagram: 'fab fa-instagram',
+            tiktok: 'fab fa-tiktok',
+            youtube: 'fab fa-youtube',
+            pinterest: 'fab fa-pinterest'
+        };
+        return icons[platform] || 'fas fa-share-alt';
+    }
+
+    async disconnectAccount(platform) {
+        if (!confirm(`Are you sure you want to disconnect your ${platform} account?`)) {
+            return;
+        }
+
+        try {
+            const response = await this.apiCall(`/social/accounts/${platform}`, 'DELETE');
+            if (response.success) {
+                this.showNotification(`${platform} account disconnected`, 'success');
+                await this.loadConnectedAccounts();
+            }
+        } catch (error) {
+            this.showNotification(`Failed to disconnect ${platform}`, 'error');
+        }
     }
 }
 

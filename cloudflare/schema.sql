@@ -15,15 +15,18 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS social_accounts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
-  platform TEXT NOT NULL, -- twitter, linkedin, facebook, instagram, tiktok, youtube
+  platform TEXT NOT NULL, -- twitter, linkedin, facebook, instagram, tiktok, youtube, pinterest
   account_id TEXT NOT NULL,
+  platform_user_id TEXT NOT NULL,
   username TEXT,
   access_token TEXT,
   refresh_token TEXT,
+  expires_at INTEGER, -- Unix timestamp for token expiration
   profile_data TEXT, -- JSON string for additional profile info
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE(user_id, platform)
 );
 
 -- Posts table

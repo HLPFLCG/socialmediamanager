@@ -1,0 +1,117 @@
+# Social Media Manager - Deployment Checklist
+
+## BACKEND DEPLOYMENT
+[ ] 1. Clone repository: git clone https://github.com/HLPFLCG/socialmediamanager.git
+[ ] 2. Switch to branch: git checkout fix/security-and-modernization
+[ ] 3. Navigate to backend: cd cloudflare
+[ ] 4. Install dependencies: npm install
+[ ] 5. Login to Cloudflare: npx wrangler login
+[ ] 6. Create D1 database: npx wrangler d1 create socialmediamanager-db
+[ ] 7. Update wrangler.toml with database_id
+[ ] 8. Initialize schema: npx wrangler d1 execute socialmediamanager-db --file=schema.sql --env production
+[ ] 9. Set JWT secret: npx wrangler secret put JWT_SECRET --env production
+[ ] 10. Deploy backend: npx wrangler deploy --env production
+[ ] 11. Save backend URL: _______________________________________
+
+## FRONTEND DEPLOYMENT
+[ ] 1. Go to Cloudflare Dashboard: https://dash.cloudflare.com
+[ ] 2. Click Pages → Create a project
+[ ] 3. Connect to Git → Select GitHub
+[ ] 4. Select repository: HLPFLCG/socialmediamanager
+[ ] 5. Configure settings:
+      - Branch: fix/security-and-modernization
+      - Framework: HTML
+      - Build output: frontend
+[ ] 6. Add environment variables:
+      - API_URL = (your backend URL from step 11 above)
+      - JWT_SECRET = hlpfl-social-media-manager-jwt-secret-2024-secure
+[ ] 7. Click "Save and Deploy"
+[ ] 8. Save frontend URL: _______________________________________
+
+## OAUTH SETUP - TWITTER
+[ ] 1. Create app at: https://developer.twitter.com/en/portal/dashboard
+[ ] 2. Enable OAuth 2.0
+[ ] 3. Set callback URL: (your frontend URL)/auth/twitter/callback
+[ ] 4. Get API Key and Secret
+[ ] 5. Set secrets:
+      npx wrangler secret put TWITTER_API_KEY --env production
+      npx wrangler secret put TWITTER_API_SECRET --env production
+
+## OAUTH SETUP - LINKEDIN
+[ ] 1. Create app at: https://www.linkedin.com/developers/apps
+[ ] 2. Add redirect URL: (your frontend URL)/auth/linkedin/callback
+[ ] 3. Request scopes: r_liteprofile, r_emailaddress, w_member_social
+[ ] 4. Get Client ID and Secret
+[ ] 5. Set secrets:
+      npx wrangler secret put LINKEDIN_CLIENT_ID --env production
+      npx wrangler secret put LINKEDIN_CLIENT_SECRET --env production
+
+## OAUTH SETUP - FACEBOOK
+[ ] 1. Create app at: https://developers.facebook.com/
+[ ] 2. Add Facebook Login product
+[ ] 3. Set redirect URI: (your frontend URL)/auth/facebook/callback
+[ ] 4. Request permissions: pages_manage_posts, pages_read_engagement
+[ ] 5. Get App ID and Secret
+[ ] 6. Set secrets:
+      npx wrangler secret put FACEBOOK_APP_ID --env production
+      npx wrangler secret put FACEBOOK_APP_SECRET --env production
+
+## OAUTH SETUP - INSTAGRAM
+[ ] 1. Use Facebook app from above
+[ ] 2. Add Instagram Basic Display product
+[ ] 3. Set redirect URI: (your frontend URL)/auth/instagram/callback
+[ ] 4. Get Instagram App ID and Secret
+[ ] 5. Set secrets:
+      npx wrangler secret put INSTAGRAM_CLIENT_ID --env production
+      npx wrangler secret put INSTAGRAM_CLIENT_SECRET --env production
+
+## OAUTH SETUP - TIKTOK
+[ ] 1. Create app at: https://developers.tiktok.com/
+[ ] 2. Set redirect URI: (your frontend URL)/auth/tiktok/callback
+[ ] 3. Request scopes: user.info.basic, video.publish
+[ ] 4. Get Client Key and Secret
+[ ] 5. Set secrets:
+      npx wrangler secret put TIKTOK_CLIENT_KEY --env production
+      npx wrangler secret put TIKTOK_CLIENT_SECRET --env production
+
+## OAUTH SETUP - YOUTUBE
+[ ] 1. Create project at: https://console.cloud.google.com/
+[ ] 2. Enable YouTube Data API v3
+[ ] 3. Create OAuth credentials
+[ ] 4. Set redirect URI: (your frontend URL)/auth/youtube/callback
+[ ] 5. Get Client ID and Secret
+[ ] 6. Set secrets:
+      npx wrangler secret put YOUTUBE_CLIENT_ID --env production
+      npx wrangler secret put YOUTUBE_CLIENT_SECRET --env production
+
+## OAUTH SETUP - PINTEREST
+[ ] 1. Create app at: https://developers.pinterest.com/
+[ ] 2. Set redirect URI: (your frontend URL)/auth/pinterest/callback
+[ ] 3. Request scopes: boards:read, pins:read, pins:write
+[ ] 4. Get App ID and Secret
+[ ] 5. Set secrets:
+      npx wrangler secret put PINTEREST_APP_ID --env production
+      npx wrangler secret put PINTEREST_APP_SECRET --env production
+
+## TESTING
+[ ] 1. Visit frontend URL
+[ ] 2. Create test account
+[ ] 3. Try connecting each social platform
+[ ] 4. Create a test post
+[ ] 5. Check analytics dashboard
+[ ] 6. Test settings page
+[ ] 7. Verify mobile responsiveness
+
+## OPTIONAL - CUSTOM DOMAIN
+[ ] 1. In Cloudflare Pages, add custom domain
+[ ] 2. Update DNS records
+[ ] 3. Wait for SSL certificate
+[ ] 4. Update OAuth callback URLs with new domain
+
+## NOTES
+Backend URL: _______________________________________
+Frontend URL: _______________________________________
+Custom Domain: _______________________________________
+
+Deployment Date: _______________________________________
+Deployed By: _______________________________________
