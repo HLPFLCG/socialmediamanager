@@ -1035,6 +1035,4 @@ app.delete('/api/posts/scheduled/:id', authenticate, async (c) => {
 });
 
 // Export the app for Cloudflare Workers
-export default {
-  fetch: app.fetch,
-};
+export default app;
