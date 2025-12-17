@@ -1033,3 +1033,8 @@ app.delete('/api/posts/scheduled/:id', authenticate, async (c) => {
     return c.json({ error: 'Failed to cancel scheduled post: ' + error.message }, 500);
   }
 });
+
+// Export the app for Cloudflare Workers
+export default {
+  fetch: app.fetch,
+};
