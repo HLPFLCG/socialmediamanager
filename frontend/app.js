@@ -1,74 +1,55 @@
-// HLPFL Social Media Manager - Frontend Application
-// API Configuration
-const API_BASE_URL = 'https://socialmediamanager-api-production.hlpfl-co.workers.dev/api';
-
-class SocialMediaManager {
+<content>class HLPFLSocialMediaManager {
     constructor() {
         this.currentUser = null;
         this.token = localStorage.getItem('token');
         this.selectedPlatforms = [];
         this.uploadedMedia = [];
-        this.scheduledPosts = [];
-        this.connectedAccounts = [];
+        this.apiBaseUrl = window.location.origin;
         this.init();
     }
 
     async init() {
         this.setupEventListeners();
+        await this.checkAuth();
         
-        // Check if user is already authenticated
-        if (this.token) {
-            const isValid = await this.checkAuth();
-            if (isValid) {
-                this.showApp();
-                await this.loadDashboard();
-            } else {
-                this.showAuthModal();
-            }
+        // Handle OAuth callback
+        this.handleOAuthCallback();
+        
+        if (this.currentUser) {
+            await this.loadDashboard();
+            await this.loadSocialAccounts();
         } else {
             this.showAuthModal();
         }
     }
 
     setupEventListeners() {
-        // Auth form
-        const authForm = document.getElementById('authForm');
-        if (authForm) {
-            authForm.addEventListener('submit', (e) => {
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.handleAuth();
+                const section = item.getAttribute('data-section');
+                this.navigateToSection(section);
             });
-        }
+        });
 
         // Auth tabs
         document.querySelectorAll('.auth-tab').forEach(tab => {
             tab.addEventListener('click', (e) => {
                 document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
                 e.target.classList.add('active');
-                
                 const isRegister = e.target.getAttribute('data-tab') === 'register';
                 document.getElementById('nameGroup').style.display = isRegister ? 'block' : 'none';
                 document.getElementById('authSubmit').textContent = isRegister ? 'Register' : 'Login';
             });
         });
 
-        // Navigation
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', (e) => {
+        // Auth form
+        const authForm = document.getElementById('authForm');
+        if (authForm) {
+            authForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const section = item.getAttribute('data-section');
-                if (section) {
-                    this.navigateToSection(section);
-                }
-            });
-        });
-
-        // Logout
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.logout();
+                this.handleAuth();
             });
         }
 
@@ -94,40 +75,21 @@ class SocialMediaManager {
             });
         });
 
-        // Post content
+        // Character count
         const postContent = document.getElementById('postContent');
         if (postContent) {
             postContent.addEventListener('input', () => this.updateCharacterCount());
         }
-
-        // Settings form
-        const settingsForm = document.getElementById('settingsForm');
-        if (settingsForm) {
-            settingsForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.saveSettings();
-            });
-        }
-
-        // Password change form
-        const passwordForm = document.getElementById('passwordForm');
-        if (passwordForm) {
-            passwordForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.changePassword();
-            });
-        }
     }
 
     async checkAuth() {
-        if (!this.token) {
-            return false;
-        }
-
+        if (!this.token) return false;
+        
         try {
-            const response = await this.apiCall('/user/profile');
+            const response = await this.apiCall('/api/user/profile');
             if (response.user) {
                 this.currentUser = response.user;
+                this.showUserInterface();
                 return true;
             } else {
                 this.logout();
@@ -140,79 +102,98 @@ class SocialMediaManager {
         }
     }
 
+    handleOAuthCallback() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const connected = urlParams.get('connected');
+        const error = urlParams.get('error');
+        const success = urlParams.get('success');
+
+        if (connected && success === 'true') {
+            this.showNotification(`${connected.charAt(0).toUpperCase() + connected.slice(1)} connected successfully!`, 'success');
+            this.loadSocialAccounts();
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (error) {
+            const message = urlParams.get('message') || 'Authentication failed';
+            this.showNotification(`Failed to connect: ${message}`, 'error');
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+
     showAuthModal() {
         const authModal = document.getElementById('authModal');
         const appContainer = document.getElementById('appContainer');
-        
         if (authModal) authModal.style.display = 'flex';
         if (appContainer) appContainer.style.display = 'none';
     }
 
-    showApp() {
+    hideAuthModal() {
         const authModal = document.getElementById('authModal');
         const appContainer = document.getElementById('appContainer');
-        
         if (authModal) authModal.style.display = 'none';
         if (appContainer) appContainer.style.display = 'flex';
-
-        // Update user info
-        if (this.currentUser) {
-            const userInfo = document.getElementById('userInfo');
-            if (userInfo) {
-                userInfo.innerHTML = `
-                    <div style="font-size: 0.875rem;">
-                        <strong>${this.currentUser.name || 'User'}</strong><br>
-                        <small>${this.currentUser.email}</small>
-                    </div>
-                `;
-            }
-        }
     }
 
     async handleAuth() {
         const form = document.getElementById('authForm');
         const formData = new FormData(form);
         const isRegister = document.querySelector('.auth-tab.active').getAttribute('data-tab') === 'register';
-
         const authData = {
             email: formData.get('email'),
-            password: formData.get('password')
+            password: formData.get('password'),
+            name: formData.get('name') || undefined
         };
 
-        if (isRegister) {
-            authData.name = formData.get('name') || authData.email.split('@')[0];
-        }
-
         try {
-            const endpoint = isRegister ? '/auth/register' : '/auth/login';
+            const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
             const response = await this.apiCall(endpoint, 'POST', authData);
-
+            
             if (response.success) {
                 this.token = response.token;
                 this.currentUser = response.user;
                 localStorage.setItem('token', this.token);
-                
-                this.showApp();
+                this.hideAuthModal();
+                this.showUserInterface();
                 await this.loadDashboard();
-                this.showNotification('Welcome back!', 'success');
+                await this.loadSocialAccounts();
+                this.showNotification(`Welcome${isRegister ? '! Your account has been created' : ' back'}!`, 'success');
             } else {
                 this.showNotification(response.error || 'Authentication failed', 'error');
             }
         } catch (error) {
-            console.error('Auth error:', error);
             this.showNotification('Authentication failed: ' + error.message, 'error');
+        }
+    }
+
+    showUserInterface() {
+        this.hideAuthModal();
+        
+        // Update user info in sidebar
+        const userInfo = document.getElementById('userInfo');
+        if (userInfo && this.currentUser) {
+            userInfo.innerHTML = `
+                <div class="user-avatar">
+                    <img src="${this.currentUser.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.currentUser.name)}&background=random`}" 
+                         alt="${this.currentUser.name}" 
+                         class="avatar-img">
+                </div>
+                <div class="user-details">
+                    <span class="user-name">${this.currentUser.name}</span>
+                    <span class="user-email">${this.currentUser.email}</span>
+                </div>
+            `;
         }
     }
 
     async loadDashboard() {
         if (!this.currentUser) return;
-
+        
         try {
-            const statsResponse = await this.apiCall('/dashboard/stats');
-            this.updateDashboardStats(statsResponse);
-            this.updateRecentPosts(statsResponse.recentPosts);
-            this.updateConnectedAccounts(statsResponse.socialAccounts);
-            this.loadConnectedAccounts();
+            const response = await this.apiCall('/api/dashboard/stats');
+            this.updateDashboardStats(response.stats);
+            this.updateRecentPosts(response.recentPosts);
+            this.updateConnectedAccounts(response.socialAccounts);
         } catch (error) {
             console.error('Failed to load dashboard:', error);
             this.showNotification('Failed to load dashboard data', 'error');
@@ -220,18 +201,18 @@ class SocialMediaManager {
     }
 
     updateDashboardStats(data) {
-        if (!data.stats) return;
-
+        if (!data) return;
+        
         const elements = {
             totalPosts: document.getElementById('totalPosts'),
             publishedPosts: document.getElementById('publishedPosts'),
             scheduledPosts: document.getElementById('scheduledPosts'),
             reach: document.getElementById('reach')
         };
-
+        
         Object.keys(elements).forEach(key => {
-            if (elements[key] && data.stats[key] !== undefined) {
-                elements[key].textContent = data.stats[key].toLocaleString();
+            if (elements[key] && data[key] !== undefined) {
+                elements[key].textContent = data[key].toLocaleString();
             }
         });
     }
@@ -239,26 +220,25 @@ class SocialMediaManager {
     updateRecentPosts(posts) {
         const postsContainer = document.getElementById('recentPosts');
         if (!postsContainer || !Array.isArray(posts)) return;
-
+        
         if (posts.length === 0) {
-            postsContainer.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><h3>No posts yet</h3><p>Create your first post to get started!</p></div>';
+            postsContainer.innerHTML = '<p>No posts yet. Create your first post!</p>';
             return;
         }
-
+        
         postsContainer.innerHTML = posts.map(post => `
-            <div class="post-card">
+            <div style="padding: 1rem; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 1rem;">
                 <p>${this.truncateText(post.content, 100)}</p>
-                <div class="post-platforms">
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                     ${post.platforms.map(platform => `
-                        <span class="platform-badge">
-                            <i class="fab fa-${platform}"></i> ${platform}
+                        <span style="background: var(--primary); color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem;">
+                            ${platform}
                         </span>
                     `).join('')}
                 </div>
-                <div class="post-meta">
-                    <span class="post-status status-${post.status}">${post.status}</span>
-                    <small>${new Date(post.created_at).toLocaleDateString()}</small>
-                </div>
+                <small style="color: var(--secondary); margin-top: 0.5rem; display: block;">
+                    ${new Date(post.created_at).toLocaleDateString()}
+                </small>
             </div>
         `).join('');
     }
@@ -266,24 +246,21 @@ class SocialMediaManager {
     updateConnectedAccounts(accounts) {
         const accountsContainer = document.getElementById('connectedAccounts');
         if (!accountsContainer) return;
-
+        
         if (!Array.isArray(accounts) || accounts.length === 0) {
-            accountsContainer.innerHTML = '<div class="empty-state"><i class="fas fa-link"></i><h3>No connected accounts</h3><p>Connect your social media accounts to start posting!</p></div>';
+            accountsContainer.innerHTML = '<p>No connected accounts. Connect your social media accounts to start posting!</p>';
             return;
         }
-
+        
         accountsContainer.innerHTML = accounts.map(account => `
-            <div class="account-card">
-                <div class="account-info">
-                    <i class="fab fa-${account.platform}" style="font-size: 1.5rem; color: var(--accent-orange);"></i>
-                    <div>
-                        <strong>${account.username || account.platform}</strong>
-                        <small>${account.platform}</small>
-                    </div>
+            <div style="padding: 1rem; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <i class="fab fa-${account.platform}" style="font-size: 1.5rem;"></i>
+                    <span>${account.username || account.platform}</span>
                 </div>
-                <button class="btn" onclick="socialMediaManager.disconnectAccount(${account.id})">
-                    <i class="fas fa-unlink"></i> Disconnect
-                </button>
+                <span style="background: var(--success); color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem;">
+                    Connected
+                </span>
             </div>
         `).join('');
     }
@@ -306,19 +283,17 @@ class SocialMediaManager {
                 platforms: this.selectedPlatforms,
                 media_urls: this.uploadedMedia
             };
-
-            const response = await this.apiCall('/posts', 'POST', postData);
-
+            
+            const response = await this.apiCall('/api/posts', 'POST', postData);
+            
             if (response.success) {
                 this.showNotification('Post created successfully!', 'success');
                 this.clearPostForm();
                 await this.loadDashboard();
-                this.navigateToSection('dashboard');
             } else {
                 this.showNotification(response.error || 'Failed to create post', 'error');
             }
         } catch (error) {
-            console.error('Create post error:', error);
             this.showNotification('Failed to create post: ' + error.message, 'error');
         }
     }
@@ -335,292 +310,51 @@ class SocialMediaManager {
         const content = document.getElementById('postContent').value || '';
         const count = content.length;
         const countElement = document.getElementById('characterCount');
-        
         if (countElement) {
             countElement.textContent = `${count} characters`;
         }
     }
 
-    async loadAnalytics() {
-        try {
-            const response = await this.apiCall('/analytics');
-            if (response.success) {
-                this.displayAnalytics(response.analytics);
-            }
-        } catch (error) {
-            console.error('Failed to load analytics:', error);
-            this.showNotification('Failed to load analytics', 'error');
-        }
-    }
-
-    displayAnalytics(analytics) {
-        const analyticsContainer = document.getElementById('analyticsContent');
-        if (!analyticsContainer) return;
-
-        analyticsContainer.innerHTML = `
-            <div class="analytics-grid">
-                <div class="stat-card">
-                    <h3>Total Posts</h3>
-                    <div class="stat-value">${analytics.totalPosts}</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Published</h3>
-                    <div class="stat-value">${analytics.publishedPosts}</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Scheduled</h3>
-                    <div class="stat-value">${analytics.scheduledPosts}</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Drafts</h3>
-                    <div class="stat-value">${analytics.draftPosts}</div>
-                </div>
-            </div>
-            
-            <div class="analytics-section">
-                <h3>Platform Breakdown</h3>
-                <div class="platform-stats">
-                    ${Object.entries(analytics.platformBreakdown).map(([platform, count]) => `
-                        <div class="platform-stat">
-                            <i class="fab fa-${platform}"></i>
-                            <span>${platform}</span>
-                            <strong>${count}</strong>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-            
-            <div class="analytics-section">
-                <h3>Engagement Metrics</h3>
-                <div class="engagement-grid">
-                    <div class="metric-card">
-                        <i class="fas fa-eye"></i>
-                        <div>
-                            <strong>${analytics.engagementMetrics.totalViews.toLocaleString()}</strong>
-                            <span>Total Views</span>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <i class="fas fa-heart"></i>
-                        <div>
-                            <strong>${analytics.engagementMetrics.totalLikes.toLocaleString()}</strong>
-                            <span>Total Likes</span>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <i class="fas fa-share"></i>
-                        <div>
-                            <strong>${analytics.engagementMetrics.totalShares.toLocaleString()}</strong>
-                            <span>Total Shares</span>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <i class="fas fa-comment"></i>
-                        <div>
-                            <strong>${analytics.engagementMetrics.totalComments.toLocaleString()}</strong>
-                            <span>Total Comments</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    async loadScheduler() {
-        try {
-            const response = await this.apiCall('/posts/scheduled');
-            if (response.success) {
-                this.scheduledPosts = response.posts;
-                this.displayScheduledPosts();
-            }
-        } catch (error) {
-            console.error('Failed to load scheduled posts:', error);
-            this.showNotification('Failed to load scheduled posts', 'error');
-        }
-    }
-
-    displayScheduledPosts() {
-        const schedulerContainer = document.getElementById('scheduledPostsList');
-        if (!schedulerContainer) return;
-
-        if (this.scheduledPosts.length === 0) {
-            schedulerContainer.innerHTML = '<div class="empty-state"><i class="fas fa-calendar"></i><h3>No scheduled posts</h3><p>Schedule posts to publish them automatically!</p></div>';
-            return;
-        }
-
-        schedulerContainer.innerHTML = this.scheduledPosts.map(post => `
-            <div class="scheduled-post-card">
-                <div class="post-content">
-                    <p>${this.truncateText(post.content, 150)}</p>
-                    <div class="post-platforms">
-                        ${post.platforms.map(p => `<span class="platform-badge"><i class="fab fa-${p}"></i> ${p}</span>`).join('')}
-                    </div>
-                </div>
-                <div class="post-schedule">
-                    <div class="schedule-time">
-                        <i class="fas fa-clock"></i>
-                        <span>${new Date(post.scheduled_at).toLocaleString()}</span>
-                    </div>
-                    <div class="post-actions">
-                        <button class="btn" onclick="socialMediaManager.editScheduledPost(${post.id})">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button class="btn" onclick="socialMediaManager.cancelScheduledPost(${post.id})">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    async cancelScheduledPost(postId) {
-        if (!confirm('Are you sure you want to cancel this scheduled post?')) return;
-
-        try {
-            const response = await this.apiCall(`/posts/scheduled/${postId}`, 'DELETE');
-            if (response.success) {
-                this.showNotification('Scheduled post cancelled', 'success');
-                await this.loadScheduler();
-            }
-        } catch (error) {
-            console.error('Failed to cancel post:', error);
-            this.showNotification('Failed to cancel post', 'error');
-        }
-    }
-
-    async loadSettings() {
-        try {
-            const response = await this.apiCall('/user/settings');
-            if (response.success) {
-                this.displaySettings(response.settings);
-            }
-        } catch (error) {
-            console.error('Failed to load settings:', error);
-            this.showNotification('Failed to load settings', 'error');
-        }
-    }
-
-    displaySettings(settings) {
-        const nameInput = document.getElementById('settingsName');
-        const emailInput = document.getElementById('settingsEmail');
-        
-        if (nameInput) nameInput.value = settings.name || '';
-        if (emailInput) emailInput.value = settings.email || '';
-    }
-
-    async saveSettings() {
-        const name = document.getElementById('settingsName').value;
-        
-        try {
-            const response = await this.apiCall('/user/settings', 'PUT', { name });
-            if (response.success) {
-                this.showNotification('Settings saved successfully', 'success');
-                this.currentUser.name = name;
-                this.showApp(); // Update user info display
-            }
-        } catch (error) {
-            console.error('Failed to save settings:', error);
-            this.showNotification('Failed to save settings', 'error');
-        }
-    }
-
-    async changePassword() {
-        const currentPassword = document.getElementById('currentPassword').value;
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-
-        if (newPassword !== confirmPassword) {
-            this.showNotification('New passwords do not match', 'error');
-            return;
-        }
-
-        try {
-            const response = await this.apiCall('/user/change-password', 'POST', {
-                currentPassword,
-                newPassword
-            });
-
-            if (response.success) {
-                this.showNotification('Password changed successfully', 'success');
-                document.getElementById('passwordForm').reset();
-            }
-        } catch (error) {
-            console.error('Failed to change password:', error);
-            this.showNotification(error.message, 'error');
-        }
-    }
-
-    async disconnectAccount(accountId) {
-        if (!confirm('Are you sure you want to disconnect this account?')) return;
-
-        try {
-            const response = await this.apiCall(`/social/accounts/${accountId}`, 'DELETE');
-            if (response.success) {
-                this.showNotification('Account disconnected', 'success');
-                await this.loadDashboard();
-            }
-        } catch (error) {
-            console.error('Failed to disconnect account:', error);
-            this.showNotification('Failed to disconnect account', 'error');
-        }
-    }
-
     navigateToSection(section) {
-        // Hide all sections
         document.querySelectorAll('.main-section').forEach(s => {
-            s.classList.remove('active');
+            s.style.display = 'none';
         });
-
-        // Show target section
+        
         const targetSection = document.getElementById(section);
         if (targetSection) {
-            targetSection.classList.add('active');
+            targetSection.style.display = 'block';
         }
-
-        // Update nav items
+        
         document.querySelectorAll('.nav-item').forEach(item => {
             item.classList.remove('active');
         });
-
+        
         const activeNavItem = document.querySelector(`[data-section="${section}"]`);
         if (activeNavItem) {
             activeNavItem.classList.add('active');
         }
-
-        // Load section-specific data
-        if (section === 'analytics') {
-            this.loadAnalytics();
-        } else if (section === 'scheduler') {
-            this.loadScheduler();
-        } else if (section === 'settings') {
-            this.loadSettings();
-        }
     }
 
     async apiCall(endpoint, method = 'GET', data = null) {
-        const url = `${API_BASE_URL}${endpoint}`;
-        const options = {
-            method,
-            headers: {}
-        };
-
+        const url = `${this.apiBaseUrl}${endpoint}`;
+        const options = { method, headers: {} };
+        
         if (this.token) {
             options.headers['Authorization'] = `Bearer ${this.token}`;
         }
-
+        
         if (data) {
             options.headers['Content-Type'] = 'application/json';
             options.body = JSON.stringify(data);
         }
-
+        
         const response = await fetch(url, options);
         const responseData = await response.json();
-
+        
         if (!response.ok) {
             throw new Error(responseData.error || `HTTP error! status: ${response.status}`);
         }
-
+        
         return responseData;
     }
 
@@ -630,12 +364,21 @@ class SocialMediaManager {
 
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i> ${message}`;
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+            <button onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
         document.body.appendChild(notification);
-
+        
         setTimeout(() => {
-            notification.remove();
+            if (notification.parentElement) {
+                notification.remove();
+            }
         }, 5000);
     }
 
@@ -644,245 +387,66 @@ class SocialMediaManager {
         this.token = null;
         this.currentUser = null;
         this.showAuthModal();
-        this.showNotification('Logged out successfully', 'info');
-    }
-
-    // OAuth Methods
-    connectSocialAccount(platform) {
-        const baseUrl = window.location.origin;
-        const authUrl = `${baseUrl}/auth/${platform}/authorize`;
-        window.open(authUrl, '_blank', 'width=600,height=600');
-    }
-
-    async loadConnectedAccounts() {
-        try {
-            const response = await this.apiCall('/social/accounts');
-            this.connectedAccounts = response.accounts || [];
-            this.updateConnectedAccountsUI();
-        } catch (error) {
-            console.error('Failed to load connected accounts:', error);
-        }
-    }
-
-    updateConnectedAccountsUI() {
-        const accountsContainer = document.getElementById('connectedAccounts');
-        if (!accountsContainer) return;
-
-        const platforms = ['twitter', 'linkedin', 'facebook', 'instagram', 'tiktok', 'youtube', 'pinterest'];
-        
-        let html = '<div class="social-accounts-grid">';
-        
-        platforms.forEach(platform => {
-            const isConnected = this.connectedAccounts.some(acc => acc.platform === platform);
-            const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
-            const iconClass = this.getPlatformIcon(platform);
-            
-            html += `
-                <div class="social-account-card ${isConnected ? 'connected' : ''}">
-                    <div class="account-info">
-                        <i class="${iconClass}"></i>
-                        <span>${platformName}</span>
-                    </div>
-                    <div class="account-actions">
-                        ${isConnected 
-                            ? `<button class="btn btn-small btn-danger" onclick="socialMediaManager.disconnectAccount('${platform}')">Disconnect</button>`
-                            : `<button class="btn btn-small btn-primary" onclick="socialMediaManager.connectSocialAccount('${platform}')">Connect</button>`
-                        }
-                    </div>
-                </div>
-            `;
-        });
-        
-        html += '</div>';
-        accountsContainer.innerHTML = html;
-    }
-
-    getPlatformIcon(platform) {
-        const icons = {
-            twitter: 'fab fa-twitter',
-            linkedin: 'fab fa-linkedin',
-            facebook: 'fab fa-facebook',
-            instagram: 'fab fa-instagram',
-            tiktok: 'fab fa-tiktok',
-            youtube: 'fab fa-youtube',
-            pinterest: 'fab fa-pinterest'
-        };
-        return icons[platform] || 'fas fa-share-alt';
-    }
-
-    async disconnectAccount(platform) {
-        if (!confirm(`Are you sure you want to disconnect your ${platform} account?`)) {
-            return;
-        }
-
-        try {
-            const response = await this.apiCall(`/social/accounts/${platform}`, 'DELETE');
-            if (response.success) {
-                this.showNotification(`${platform} account disconnected`, 'success');
-                await this.loadConnectedAccounts();
-            }
-        } catch (error) {
-            this.showNotification(`Failed to disconnect ${platform}`, 'error');
-        }
     }
 }
 
-// Initialize the application when DOM is ready
-let socialMediaManager;
-document.addEventListener('DOMContentLoaded', () => {
-    socialMediaManager = new SocialMediaManager();
-});
-// Social Accounts Management
-function initializeSocialAccounts() {
-    // Add event listeners to connect buttons
-    document.querySelectorAll('.btn-connect').forEach(button => {
-        button.addEventListener('click', async (e) => {
-            const platform = e.currentTarget.dataset.platform;
-            await connectSocialAccount(platform);
-        });
-    });
-
-    // Add event listeners to disconnect buttons
-    document.addEventListener('click', async (e) => {
-        if (e.target.classList.contains('btn-disconnect')) {
-            const platform = e.target.dataset.platform;
-            await disconnectSocialAccount(platform);
-        }
-    });
-
-    // Load accounts on page load
-    loadSocialAccounts();
-}
-
-async function loadSocialAccounts() {
-    // Show loading state
-    document.querySelectorAll('.account-status').forEach(status => {
-        status.textContent = 'Loading...';
-    });
-    document.querySelectorAll('.connection-info').forEach(info => {
-        info.innerHTML = '<div class="oauth-loading"><i class="fas fa-spinner fa-spin"></i><span>Loading...</span></div>';
-    });
-
-    try {
-        // Load actual connected accounts from API
-        const response = await fetch(`${API_BASE_URL}/api/social/accounts`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to load accounts');
-        }
-
-        const accounts = await response.json();
-        updateAccountCards(accounts);
-
-    } catch (error) {
-        console.error('Failed to load accounts:', error);
-        // Reset to disconnected state
-        updateAccountCards([]);
-    }
-}
-
-function updateAccountCards(accounts) {
-    // Reset all cards to disconnected state first
-    document.querySelectorAll('.account-card').forEach(card => {
-        const platform = card.dataset.platform;
-        const statusElement = card.querySelector('.account-status');
-        const button = card.querySelector('.btn-connect, .btn-disconnect');
-        const connectionInfo = card.querySelector('.connection-info');
-        
-        statusElement.textContent = 'Not connected';
-        statusElement.className = 'account-status';
-        button.innerHTML = '<i class="fas fa-plus"></i> Connect';
-        button.classList.remove('btn-disconnect');
-        button.classList.add('btn-connect', 'btn-outline');
-        button.dataset.platform = platform;
-        connectionInfo.innerHTML = '<span class="no-accounts">No accounts connected</span>';
-    });
-
-    // Update cards with connected accounts
-    accounts.forEach(account => {
-        const card = document.querySelector(`.account-card[data-platform="${account.platform}"]`);
-        if (!card) return;
-
-        const statusElement = card.querySelector('.account-status');
-        const button = card.querySelector('.btn-connect, .btn-disconnect');
-        const connectionInfo = card.querySelector('.connection-info');
-        
-        statusElement.textContent = 'Connected';
-        statusElement.className = 'account-status connected';
-        button.innerHTML = '<i class="fas fa-times"></i> Disconnect';
-        button.classList.remove('btn-connect', 'btn-outline');
-        button.classList.add('btn-disconnect');
-        button.dataset.platform = account.platform;
-        
-        connectionInfo.innerHTML = `
-            <div class="connected-account">
-                <div class="account-user">
-                    <strong>${account.username || account.display_name || 'Account'}</strong>
-                    <span class="account-id">ID: ${account.platform_user_id}</span>
-                </div>
-                <div class="account-stats">
-                    <span>Connected: ${new Date(account.created_at).toLocaleDateString()}</span>
-                </div>
-            </div>
-        `;
-    });
-}
-
+// Global OAuth functions
 async function connectSocialAccount(platform) {
     try {
         // Show loading state
         const button = document.querySelector(`.btn-connect[data-platform="${platform}"]`);
+        if (!button) {
+            console.error(`Connect button for ${platform} not found`);
+            return;
+        }
+        
         const originalText = button.innerHTML;
         button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
         button.disabled = true;
 
         // Get current user
         const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (!user.id && socialMediaManager.currentUser) {
+            user.id = socialMediaManager.currentUser.id;
+        }
         
-        // Initiate OAuth flow
-        const response = await fetch(`${API_BASE_URL}/oauth/${platform}/authorize?user_id=${user.id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+        // Initiate OAuth flow with user_id
+        const baseUrl = window.location.origin;
+        const authUrl = `${baseUrl}/auth/${platform}/authorize?user_id=${user.id}`;
+        
+        // Open OAuth popup
+        const popup = window.open(authUrl, '_blank', 'width=600,height=600');
+        
+        // Listen for popup closure
+        const checkClosed = setInterval(() => {
+            if (popup.closed) {
+                clearInterval(checkClosed);
+                button.innerHTML = originalText;
+                button.disabled = false;
+                socialMediaManager.showNotification('Authentication was cancelled', 'info');
             }
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to initiate OAuth flow');
-        }
-
-        const data = await response.json();
-        
-        // Redirect to OAuth provider
-        if (data.authorization_url) {
-            window.location.href = data.authorization_url;
-        } else {
-            throw new Error('No authorization URL received');
-        }
+        }, 1000);
 
     } catch (error) {
         console.error('Connection error:', error);
-        showNotification('Failed to connect account. Please try again.', 'error');
+        socialMediaManager.showNotification('Failed to connect account. Please try again.', 'error');
         
         // Reset button
         const button = document.querySelector(`.btn-connect[data-platform="${platform}"]`);
-        button.innerHTML = originalText;
-        button.disabled = false;
+        if (button) {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
     }
 }
 
 async function disconnectSocialAccount(platform) {
     try {
-        if (!confirm('Are you sure you want to disconnect this account?')) {
+        if (!confirm(`Are you sure you want to disconnect your ${platform} account?`)) {
             return;
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/social/accounts/${platform}`, {
+        const response = await fetch(`${window.location.origin}/api/social/accounts/${platform}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -893,84 +457,99 @@ async function disconnectSocialAccount(platform) {
             throw new Error('Failed to disconnect account');
         }
 
-        showNotification('Account disconnected successfully', 'success');
-        loadSocialAccounts(); // Refresh the accounts list
+        socialMediaManager.showNotification('Account disconnected successfully', 'success');
+        loadSocialAccounts();
 
     } catch (error) {
         console.error('Disconnection error:', error);
-        showNotification('Failed to disconnect account', 'error');
+        socialMediaManager.showNotification('Failed to disconnect account', 'error');
     }
 }
 
-// Handle OAuth callback
-function handleOAuthCallback() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const platform = urlParams.get('platform');
-    const code = urlParams.get('code');
-    const state = urlParams.get('state');
-    const error = urlParams.get('error');
-
-    if (platform && (code || error)) {
-        if (error) {
-            console.error('OAuth error:', error);
-            showNotification('Authentication failed', 'error');
-            return;
-        }
-
-        // Exchange code for token
-        exchangeCodeForToken(platform, code, state);
-    }
-}
-
-async function exchangeCodeForToken(platform, code, state) {
+async function loadSocialAccounts() {
     try {
-        const response = await fetch(`${API_BASE_URL}/oauth/${platform}/callback`, {
-            method: 'POST',
+        // Show loading state
+        document.querySelectorAll('.account-status').forEach(status => {
+            status.textContent = 'Loading...';
+        });
+        document.querySelectorAll('.connection-info').forEach(info => {
+            info.innerHTML = '<div class="oauth-loading"><i class="fas fa-spinner fa-spin"></i><span>Loading...</span></div>';
+        });
+
+        // Load actual connected accounts from API
+        const response = await fetch(`${window.location.origin}/api/social/accounts`, {
             headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ code, state })
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
         });
 
         if (!response.ok) {
-            throw new Error('Failed to exchange code for token');
+            throw new Error('Failed to load accounts');
         }
 
-        const result = await response.json();
-        
-        if (result.success) {
-            showNotification(`${platform.charAt(0).toUpperCase() + platform.slice(1)} connected successfully!`, 'success');
-            // Reload accounts after a short delay
-            setTimeout(() => {
-                loadSocialAccounts();
-            }, 1000);
-        } else {
-            showNotification('Failed to connect account', 'error');
-        }
+        const data = await response.json();
+        const accounts = data.accounts || [];
+        updateAccountCards(accounts);
 
     } catch (error) {
-        console.error('Token exchange error:', error);
-        showNotification('Failed to connect account', 'error');
+        console.error('Failed to load accounts:', error);
+        updateAccountCards([]);
     }
 }
 
-// Initialize social accounts when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    // Handle OAuth callback on page load
-    handleOAuthCallback();
+function updateAccountCards(accounts) {
+    const platforms = ['twitter', 'linkedin', 'facebook', 'instagram'];
     
-    // Initialize social accounts if on accounts page
-    if (window.location.hash === '#accounts' || document.getElementById('accounts')) {
-        setTimeout(() => {
-            initializeSocialAccounts();
-        }, 100);
-    }
+    platforms.forEach(platform => {
+        const card = document.querySelector(`.account-card[data-platform="${platform}"]`);
+        if (!card) return;
+        
+        const statusElement = card.querySelector('.account-status');
+        const buttonElement = card.querySelector('.btn-connect');
+        const connectionInfoElement = card.querySelector('.connection-info');
+        
+        const isConnected = accounts.some(account => account.platform === platform);
+        
+        if (isConnected) {
+            statusElement.textContent = 'Connected';
+            statusElement.className = 'account-status connected';
+            
+            buttonElement.innerHTML = '<i class="fas fa-unlink"></i> Disconnect';
+            buttonElement.className = 'btn-connect btn-danger';
+            buttonElement.onclick = () => disconnectSocialAccount(platform);
+            
+            const account = accounts.find(acc => acc.platform === platform);
+            connectionInfoElement.innerHTML = `
+                <div class="account-details">
+                    <p><strong>Account ID:</strong> ${account.platform_user_id}</p>
+                    <p><strong>Connected:</strong> ${new Date(account.created_at).toLocaleDateString()}</p>
+                </div>
+            `;
+        } else {
+            statusElement.textContent = 'Not connected';
+            statusElement.className = 'account-status disconnected';
+            
+            buttonElement.innerHTML = '<i class="fas fa-link"></i> Connect';
+            buttonElement.className = 'btn-connect btn-outline';
+            buttonElement.onclick = () => connectSocialAccount(platform);
+            
+            connectionInfoElement.innerHTML = `
+                <div class="empty-connection">
+                    <p>Connect your ${platform} account to start posting</p>
+                </div>
+            `;
+        }
+    });
+}
+
+// Initialize the app
+let socialMediaManager;
+document.addEventListener('DOMContentLoaded', () => {
+    socialMediaManager = new HLPFLSocialMediaManager();
 });
 
-// Make refreshAccounts function globally available
-function refreshAccounts() {
-    loadSocialAccounts();
-    showNotification('Accounts refreshed', 'info');
-}
-
-console.log('Social Accounts functionality loaded');
+// Make functions globally available
+window.connectSocialAccount = connectSocialAccount;
+window.disconnectSocialAccount = disconnectSocialAccount;
+window.loadSocialAccounts = loadSocialAccounts;
+</content>
