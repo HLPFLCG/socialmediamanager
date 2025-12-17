@@ -112,8 +112,10 @@ export default {
         });
       }
 
-      // Protected routes
-      if (path.startsWith('/api/')) {
+      // Protected routes (exclude auth endpoints)
+      const publicPaths = ['/api/auth/register', '/api/auth/login', '/api/health'];
+      
+      if (path.startsWith('/api/') && !publicPaths.includes(path)) {
         const authHeader = request.headers.get('Authorization');
         if (!authHeader) {
           return new Response(JSON.stringify({ error: 'No authorization header' }), {
