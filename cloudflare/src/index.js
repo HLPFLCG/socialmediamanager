@@ -1,23 +1,25 @@
-import { Hono } from 'hono';
-import { cors } from 'hono/cors';
-import { jwt } from 'hono/jwt';
-import { auth } from 'hono/auth';
-import { D1Database } from 'cloudflare';
+import { Hono } from 'hono/index.js';
 
 const app = new Hono();
 
-// CORS configuration
-app.use('*', cors({
-  origin: ['https://hlpfl.space', 'http://localhost:3000'],
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+// Simple CORS middleware
+app.use('*', async (c, next) => {
+  c.header('Access-Control-Allow-Origin', 'https://hlpfl.space');
+  c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  c.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (c.req.method === 'OPTIONS') {
+    return c.text('', 200);
+  }
+  
+  await next();
+});
 
 // JWT middleware for protected routes
 app.use('/api/*', async (c, next) => {
   const authHeader = c.req.header('Authorization');
-  const publicPaths = ['/api/register', '/api/login', '/api/health'];
+  const publicPaths = ['/api/auth/register', '/api/auth/login', '/api/health'];
   
   if (publicPaths.some(path => c.req.path.startsWith(path))) {
     return next();
@@ -59,7 +61,7 @@ app.get('/api/health', (c) => {
 });
 
 // Register endpoint
-app.post('/api/register', async (c) => {
+app.post('/api/auth/register', async (c) => {
   try {
     const { email, password, name } = await c.req.json();
     
@@ -100,7 +102,7 @@ app.post('/api/register', async (c) => {
 });
 
 // Login endpoint
-app.post('/api/login', async (c) => {
+app.post('/api/auth/login', async (c) => {
   try {
     const { email, password } = await c.req.json();
     

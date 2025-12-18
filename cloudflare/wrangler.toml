@@ -1,7 +1,9 @@
 name = "socialmediamanager-api"
 main = "src/index.js"
 compatibility_date = "2024-12-17"
-compatibility_flags = ["nodejs_compat"]
+compatibility_flags = ["nodejs_compat", "nodejs_compat_v2"]
+
+# Simple worker - no build needed
 account_id = "8c74a072236761cf6126371f0b20c5a9"
 
 [vars]
