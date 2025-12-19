@@ -3,12 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HLPFL Social Media Manager - Manage your social media presence efficiently">
+    <meta name="theme-color" content="#d4915d">
     <title>Social Media Manager - HLPFL</title>
     <link rel="icon" type="image/svg+xml" href="logo.svg">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles-perfect.css">
 <script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
 </head>
 <body>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" role="status" aria-live="polite">
+        <div class="spinner" aria-label="Loading"></div>
+    </div>
+
     <!-- Auth Container -->
     <div id="auth-container" class="auth-container">
         <div class="auth-card">
@@ -24,11 +34,25 @@
                 <form id="login-form" class="auth-form">
                     <div class="form-group">
                         <label for="login-email">Email</label>
-                        <input type="email" id="login-email" name="email" required>
+                        <input 
+                            type="email" 
+                            id="login-email" 
+                            name="email" 
+                            required 
+                            autocomplete="email"
+                            aria-required="true"
+                        >
                     </div>
                     <div class="form-group">
                         <label for="login-password">Password</label>
-                        <input type="password" id="login-password" name="password" required>
+                        <input 
+                            type="password" 
+                            id="login-password" 
+                            name="password" 
+                            required
+                            autocomplete="current-password"
+                            aria-required="true"
+                        >
                     </div>
                     <button type="submit" class="btn btn-primary">Login</button>
                 </form>
@@ -43,19 +67,53 @@
                 <form id="register-form" class="auth-form">
                     <div class="form-group">
                         <label for="register-name">Name</label>
-                        <input type="text" id="register-name" name="name" required>
+                        <input 
+                            type="text" 
+                            id="register-name" 
+                            name="name" 
+                            required
+                            autocomplete="name"
+                            aria-required="true"
+                        >
                     </div>
                     <div class="form-group">
                         <label for="register-email">Email</label>
-                        <input type="email" id="register-email" name="email" required>
+                        <input 
+                            type="email" 
+                            id="register-email" 
+                            name="email" 
+                            required
+                            autocomplete="email"
+                            aria-required="true"
+                        >
                     </div>
                     <div class="form-group">
                         <label for="register-password">Password</label>
-                        <input type="password" id="register-password" name="password" required>
+                        <input 
+                            type="password" 
+                            id="register-password" 
+                            name="password" 
+                            required
+                            minlength="8"
+                            autocomplete="new-password"
+                            aria-required="true"
+                            aria-describedby="password-requirements"
+                        >
+                        <small id="password-requirements" class="form-text">
+                            Password must be at least 8 characters long
+                        </small>
                     </div>
                     <div class="form-group">
                         <label for="register-confirm-password">Confirm Password</label>
-                        <input type="password" id="register-confirm-password" name="confirm-password" required>
+                        <input 
+                            type="password" 
+                            id="register-confirm-password" 
+                            name="confirm-password" 
+                            required
+                            minlength="8"
+                            autocomplete="new-password"
+                            aria-required="true"
+                        >
                     </div>
                     <button type="submit" class="btn btn-primary">Register</button>
                 </form>
@@ -69,215 +127,237 @@
     <!-- Dashboard Container -->
     <div id="dashboard-container" class="dashboard-container">
         <!-- Header -->
-        <header class="header">
+        <header class="header" role="banner">
             <div class="header-left">
                 <img src="logo.svg" alt="HLPFL Logo" class="logo">
                 <h1>Social Media Manager</h1>
             </div>
             <div class="header-right">
                 <span class="user-info">Welcome, <span id="user-name"></span></span>
-                <button id="logout-btn" class="btn btn-outline">Logout</button>
+                <button id="logout-btn" class="btn btn-outline" aria-label="Logout">Logout</button>
             </div>
         </header>
 
         <!-- Navigation -->
-        <nav class="navigation">
-            <div class="nav-item active" data-section="create-post">
-                <i class="icon">📝</i>
+        <nav class="navigation" role="navigation" aria-label="Main navigation">
+            <div class="nav-item active" data-section="create-post" role="button" tabindex="0">
+                <i class="icon" aria-hidden="true">📝</i>
                 <span>Create Post</span>
             </div>
-            <div class="nav-item" data-section="posts">
-                <i class="icon">📋</i>
+            <div class="nav-item" data-section="posts" role="button" tabindex="0">
+                <i class="icon" aria-hidden="true">📋</i>
                 <span>Posts</span>
             </div>
-            <div class="nav-item" data-section="analytics">
-                <i class="icon">📊</i>
+            <div class="nav-item" data-section="analytics" role="button" tabindex="0">
+                <i class="icon" aria-hidden="true">📊</i>
                 <span>Analytics</span>
             </div>
-            <div class="nav-item" data-section="settings">
-                <i class="icon">⚙️</i>
+            <div class="nav-item" data-section="settings" role="button" tabindex="0">
+                <i class="icon" aria-hidden="true">⚙️</i>
                 <span>Settings</span>
             </div>
         </nav>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main id="main-content" class="main-content" role="main">
+            
             <!-- Create Post Section -->
-            <section id="create-post" class="content-section active">
-                <div class="section-header">
-                    <h2>Create New Post</h2>
-                    <p>Compose and schedule your social media content</p>
-                </div>
-                
-                <div class="post-creator">
-                    <form id="create-post-form" class="post-form">
+            <section id="create-post-section" class="section active">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Create New Post</h2>
+                    </div>
+                    
+                    <form id="create-post-form">
                         <div class="form-group">
-                            <label for="post-platform">Platform</label>
-                            <select id="post-platform" name="platform" required>
-                                <option value="">Select Platform</option>
-                                <option value="twitter">Twitter/X</option>
-                                <option value="facebook">Facebook</option>
-                                <option value="linkedin">LinkedIn</option>
-                                <option value="instagram">Instagram</option>
-                            </select>
+                            <label for="post-content">Post Content</label>
+                            <textarea 
+                                id="post-content" 
+                                name="content" 
+                                placeholder="What's on your mind?"
+                                required
+                                aria-required="true"
+                            ></textarea>
+                            <div id="char-count" class="char-count" aria-live="polite">0/280</div>
                         </div>
                         
                         <div class="form-group">
-                            <label for="post-content">Content</label>
-                            <textarea id="post-content" name="content" placeholder="What would you like to share?" required></textarea>
-                            <div class="char-counter">
-                                <span id="char-counter">0/280</span>
+                            <label>Select Platforms</label>
+                            <div class="platform-selector" role="group" aria-label="Platform selection">
+                                <div class="platform-option">
+                                    <input type="checkbox" id="platform-twitter" name="platform" value="twitter">
+                                    <label for="platform-twitter">🐦 Twitter</label>
+                                </div>
+                                <div class="platform-option">
+                                    <input type="checkbox" id="platform-linkedin" name="platform" value="linkedin">
+                                    <label for="platform-linkedin">💼 LinkedIn</label>
+                                </div>
+                                <div class="platform-option">
+                                    <input type="checkbox" id="platform-facebook" name="platform" value="facebook">
+                                    <label for="platform-facebook">👥 Facebook</label>
+                                </div>
+                                <div class="platform-option">
+                                    <input type="checkbox" id="platform-instagram" name="platform" value="instagram">
+                                    <label for="platform-instagram">📷 Instagram</label>
+                                </div>
+                                <div class="platform-option">
+                                    <input type="checkbox" id="platform-tiktok" name="platform" value="tiktok">
+                                    <label for="platform-tiktok">🎵 TikTok</label>
+                                </div>
+                                <div class="platform-option">
+                                    <input type="checkbox" id="platform-youtube" name="platform" value="youtube">
+                                    <label for="platform-youtube">▶️ YouTube</label>
+                                </div>
                             </div>
                         </div>
                         
                         <div class="form-group">
-                            <label for="post-status">Status</label>
-                            <select id="post-status" name="status">
-                                <option value="draft">Draft</option>
-                                <option value="scheduled">Scheduled</option>
-                                <option value="published">Published</option>
-                            </select>
+                            <label>Schedule Post (Optional)</label>
+                            <div class="schedule-options">
+                                <input type="date" id="schedule-date" name="schedule-date">
+                                <input type="time" id="schedule-time" name="schedule-time">
+                            </div>
                         </div>
                         
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-outline">Save Draft</button>
-                            <button type="submit" class="btn btn-primary">Create Post</button>
-                        </div>
+                        <button type="submit" class="btn btn-primary">Create Post</button>
                     </form>
                 </div>
             </section>
 
             <!-- Posts Section -->
-            <section id="posts" class="content-section">
-                <div class="section-header">
-                    <h2>Your Posts</h2>
-                    <p>Manage and review your social media posts</p>
-                </div>
-                
-                <div id="posts-container" class="posts-container">
-                    <!-- Posts will be loaded here -->
+            <section id="posts-section" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Your Posts</h2>
+                    </div>
+                    <div id="posts-list" class="posts-grid"></div>
                 </div>
             </section>
 
             <!-- Analytics Section -->
-            <section id="analytics" class="content-section">
-                <div class="section-header">
-                    <h2>Analytics</h2>
-                    <p>Track your social media performance</p>
+            <section id="analytics-section" class="section">
+                <h2>Analytics Dashboard</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-posts">0</div>
+                        <div class="stat-label">Total Posts</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="published-posts">0</div>
+                        <div class="stat-label">Published</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="scheduled-posts">0</div>
+                        <div class="stat-label">Scheduled</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="draft-posts">0</div>
+                        <div class="stat-label">Drafts</div>
+                    </div>
                 </div>
                 
-                <div class="analytics-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">📝</div>
-                        <div class="stat-info">
-                            <h3 id="total-posts">0</h3>
-                            <p>Total Posts</p>
-                        </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Platform Breakdown</h3>
                     </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">👀</div>
-                        <div class="stat-info">
-                            <h3 id="total-views">0</h3>
-                            <p>Total Views</p>
-                        </div>
+                    <div id="platform-breakdown"></div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Activity</h3>
                     </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">❤️</div>
-                        <div class="stat-info">
-                            <h3 id="total-likes">0</h3>
-                            <p>Total Likes</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">🔄</div>
-                        <div class="stat-info">
-                            <h3 id="total-shares">0</h3>
-                            <p>Total Shares</p>
-                        </div>
-                    </div>
+                    <div id="recent-activity"></div>
                 </div>
             </section>
 
             <!-- Settings Section -->
-            <section id="settings" class="content-section">
-                <div class="section-header">
-                    <h2>Settings</h2>
-                    <p>Manage your account and preferences</p>
+            <section id="settings-section" class="section">
+                <h2>Settings</h2>
+                
+                <!-- Profile Settings -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Profile Settings</h3>
+                    </div>
+                    <form id="profile-settings-form">
+                        <div class="form-group">
+                            <label for="settings-name">Name</label>
+                            <input 
+                                type="text" 
+                                id="settings-name" 
+                                name="name"
+                                autocomplete="name"
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="settings-email">Email</label>
+                            <input 
+                                type="email" 
+                                id="settings-email" 
+                                name="email"
+                                autocomplete="email"
+                            >
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
                 </div>
                 
-                <div class="settings-container">
-                    <div class="setting-group">
-                        <h3>Profile Settings</h3>
-                        <div class="setting-item">
-                            <label for="profile-name">Name</label>
-                            <input type="text" id="profile-name" value="">
-                        </div>
-                        <div class="setting-item">
-                            <label for="profile-email">Email</label>
-                            <input type="email" id="profile-email" value="">
-                        </div>
-                        <button class="btn btn-primary">Update Profile</button>
+                <!-- Password Change -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Change Password</h3>
                     </div>
-                    
-                    <div class="setting-group">
-                        <h3>Social Accounts</h3>
-                        <div class="social-accounts">
-                            <div class="account-card">
-                                <div class="account-info">
-                                    <span class="account-platform">Twitter/X</span>
-                                    <span class="account-status disconnected">Not Connected</span>
-                                </div>
-                                <button class="btn btn-outline btn-sm">Connect</button>
-                            </div>
-                            
-                            <div class="account-card">
-                                <div class="account-info">
-                                    <span class="account-platform">Facebook</span>
-                                    <span class="account-status disconnected">Not Connected</span>
-                                </div>
-                                <button class="btn btn-outline btn-sm">Connect</button>
-                            </div>
-                            
-                            <div class="account-card">
-                                <div class="account-info">
-                                    <span class="account-platform">LinkedIn</span>
-                                    <span class="account-status disconnected">Not Connected</span>
-                                </div>
-                                <button class="btn btn-outline btn-sm">Connect</button>
-                            </div>
+                    <form id="change-password-form">
+                        <div class="form-group">
+                            <label for="current-password">Current Password</label>
+                            <input 
+                                type="password" 
+                                id="current-password" 
+                                name="current-password"
+                                required
+                                autocomplete="current-password"
+                            >
                         </div>
+                        <div class="form-group">
+                            <label for="new-password">New Password</label>
+                            <input 
+                                type="password" 
+                                id="new-password" 
+                                name="new-password"
+                                required
+                                minlength="8"
+                                autocomplete="new-password"
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-new-password">Confirm New Password</label>
+                            <input 
+                                type="password" 
+                                id="confirm-new-password" 
+                                name="confirm-new-password"
+                                required
+                                minlength="8"
+                                autocomplete="new-password"
+                            >
+                        </div>
+                        <button type="submit" class="btn btn-primary">Change Password</button>
+                    </form>
+                </div>
+                
+                <!-- Social Accounts -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Connected Accounts</h3>
                     </div>
+                    <div id="social-accounts-list" class="accounts-grid"></div>
                 </div>
             </section>
+
         </main>
     </div>
 
-    <!-- Loading Spinner -->
-    <div id="loader" class="loader" style="display: none;">
-        <div class="loader-content">
-            <div class="spinner"></div>
-            <p>Loading...</p>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
-    <script>
-        // Switch between login and register forms
-        function switchAuth(type) {
-            const loginSection = document.getElementById('login-section');
-            const registerSection = document.getElementById('register-section');
-            
-            if (type === 'register') {
-                loginSection.classList.remove('active');
-                registerSection.classList.add('active');
-            } else {
-                registerSection.classList.remove('active');
-                loginSection.classList.add('active');
-            }
-        }
-    </script>
+    <script src="app-perfect.js"></script>
 </body>
 </html>
