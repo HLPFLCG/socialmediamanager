@@ -1,0 +1,16 @@
+name = "socialmediamanager-api-production"
+main = "src/index.js"
+compatibility_date = "2024-12-19"
+
+[env.production]
+name = "socialmediamanager-api-production"
+
+[env.production.vars]
+ENVIRONMENT = "production"
+NODE_ENV = "production"
+ALLOWED_ORIGINS = "https://hlpfl.space,https://socialmediamanager-api-production.hlpfl-co.workers.dev"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "socialmediamanager-db"
+database_id = "8860d9ea-f18a-422d-b409-f641edd83fd0"
