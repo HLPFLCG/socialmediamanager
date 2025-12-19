@@ -78,7 +78,7 @@ class SocialMediaManager {
 
         try {
             this.showLoading('Logging in...');
-            const response = await this.apiCall('/api/login', 'POST', { email, password });
+            const response = await this.apiCall('/api/auth/login', 'POST', { email, password });
             
             if (response.token) {
                 this.token = response.token;
@@ -112,7 +112,7 @@ class SocialMediaManager {
 
         try {
             this.showLoading('Creating account...');
-            const response = await this.apiCall('/api/register', 'POST', { name, email, password });
+            const response = await this.apiCall('/api/auth/register', 'POST', { name, email, password });
             
             if (response.token) {
                 this.token = response.token;
